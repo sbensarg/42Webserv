@@ -5,6 +5,11 @@ void trim(std::string &line)
   line.erase(std::remove_if(line.begin(), line.end(), isspace), line.end());
 }
 
+Config::Config(void)
+{
+
+}
+
 Config::Config(std::string &b)
 {
 // TODO: Read server settings from block
@@ -81,6 +86,10 @@ std::string &Config::get_servername(void)
   return (this->server_name);
 }
 
+std::map<std::string, s_route> &Config::get_routes(void)
+{
+	return (this->routes);
+}
 
 std::pair<std::string, s_route> Config::get_route(std::string &b, std::istringstream &block)
 {

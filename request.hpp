@@ -3,15 +3,18 @@
 
 #include "main.hpp"
 
+
 class Request
 {
-private:
+public:
 	std::string body;
 	std::string data;
 	std::string ret_cnt_type;
 	int total_size;
 	int header_length;
 	int cnt_size;
+	int port;
+	std::string host;
 	std::map<std::string, std::string> map;
 public:
 	Request(void);
@@ -24,8 +27,12 @@ public:
 	bool check_http_vesion(void);
 	bool check_method(void);
 	void ret_cnt_Type(void);
+
 	//getters
 	std::string getRetCntType(void);
+	std::string geturi(void);
+	void get_port();
+	
 	std::map<std::string, std::string> getMap(void);
 	//affichage request
 	void affichage_request();

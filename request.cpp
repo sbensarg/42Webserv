@@ -75,6 +75,7 @@ void Request::parse_request()
 		std::string value = token.substr(pos + 2);
 		this->map.insert(std::pair<std::string, std::string>(name, value));
 	}
+	get_port();
 	// if (this->map.at("method") == "POST")
 	// {
 	// 	std::size_t f = request_header.find("\r\n\r\n");
@@ -127,10 +128,37 @@ void Request::ret_cnt_Type()
 		infile.close();
 	}
 }
+void Request::get_port()
+{
+	std::string value;
+	
+	size_t i = 0;
+	value = this->map.at("Host");
+	i = value.find(":");
+	if (i != std::string::npos)
+	{
+		this->host = value.substr(0, i);
+		std::string s(value, i + 1);
+		this->port = std::atoi(s.c_str());
+	}
+	else
+	{
+		this->port = 80;
+		this->host = value;
+	}
+
+}
 
 std::string Request::getRetCntType(void)
 {
 	return this->ret_cnt_type;
+}
+
+std::string Request::geturi(void)
+{
+	std::string value;
+	value = this->map.at("uri");
+	return (value);
 }
 
 std::map<std::string, std::string> Request::getMap(void)
@@ -152,5 +180,7 @@ void Request::affichage_request()
 
 	if (this->check_method() == true)
 		std::cout << "method allowed \n";
+	//this->get_port();
+	//std::cout << "port " << this->port << " host " << this->host << "\n"; 
 	std::cout << "POST BODY ==> {" << this->body << "}\n";
 }

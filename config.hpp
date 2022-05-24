@@ -38,12 +38,13 @@ class Config
 public:
   Config(std::string &b);
   Config(const Config &c);
+  Config(void);
   ~Config();
   s_listen &get_listen(void);
   std::string &get_servername(void);
+  std::map<std::string, s_route> &get_routes(void);
 private:
   std::pair<std::string, s_route> get_route(std::string &b, std::istringstream &block);
-
 private:
   Server *serv;
   s_listen listen;

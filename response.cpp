@@ -8,6 +8,16 @@ Response::~Response()
 {
 }
 
+std::string &Response::getFullPathLocation(void)
+{
+	return (this->location);
+}
+
+void Response::setFullPathLocation(std::string l)
+{
+	this->location = l;
+}
+
 int Response::make_response(int client_socket, Request req)
 {
 	// Transfer the whole HTML to a std::string

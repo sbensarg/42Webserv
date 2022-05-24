@@ -30,7 +30,13 @@ struct	s_listen {
     this->port = s.port;
     return (*this);
   }
-
+//  for( i = 0 i < config.size())
+//  {
+// 	 port = config.getPo
+// 	 host = Config
+// 	 if(server == {port, host})
+// 	 	returnn config[i]
+//  }
   bool operator==(const s_listen &s) const
   {
     return (this->host == s.host && this->port == s.port);
@@ -45,7 +51,7 @@ public:
   int getFd(void);
   ~Server();
 
-private:
+public:
   s_listen listen;
   int server_socket;
 

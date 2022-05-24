@@ -1,5 +1,9 @@
 #include "cluster.hpp"
 
+// Cluster::Cluster(void)
+// {
+
+// }
 Cluster::Cluster(std::string configfile)
 {
   //TODO: read config file
@@ -105,6 +109,60 @@ int accept_connection(int server_socket)
 }
 
 
+
+void Cluster::find_Path(int fd)
+{
+	Response s;
+	std::string location_full_path;
+	std::map<int, Request>::iterator it;
+	std::string uri;
+	int flag = 0;
+	it = this->requests.find(fd);
+	if (it != this->requests.end())
+	{
+		for(std::vector<Config>::iterator it2 = configs.begin(); it2 != configs.end(); it2++)
+		{
+			if (it->second.host == it2->get_listen().host && it->second.port == it2->get_listen().port)
+			{
+				uri = it->second.geturi(); 
+				std::map<std::string, s_route>::iterator i = it2->get_routes().begin();
+				int j = it2->get_routes().size() - 1;
+				while (i != it2->get_routes().end())
+				{
+					std::string last_path = i->first;
+					std::string first_path = i->second.root;
+					std::cout << "last_path => " << last_path << "| uri =>" << uri << "\n";
+					if (uri == last_path)
+					{
+						std::cout << "dkhaal " << "\n";
+						location_full_path = i->second.root + i->first;
+						s.setFullPathLocation(location_full_path);
+						break;
+					}
+					i++;
+					if (j == 0)
+					{
+						i = it2->get_routes().begin();
+						j = it2->get_routes().size() - 1;
+						size_t pos = 0;
+						pos = uri.find_last_of("/");
+						if (pos != std::string::npos && pos != 0)
+						{
+							uri = uri.substr(0, pos);
+						}
+						else if (pos == 0)
+							uri = "/";
+					}
+					j--;			
+				}
+			}
+				
+		}
+	}
+
+	std::cout << "full path " << s.getFullPathLocation() << "\n";
+}
+
 int Cluster::read_request(int fd)
 {
   std::map<int, Request>::iterator it;
@@ -129,6 +187,8 @@ int Cluster::read_request(int fd)
 		{
 			it->second.parse_request();
 			it->second.affichage_request();
+			this->find_Path(fd);
+
 			return (1);
 		}
   }

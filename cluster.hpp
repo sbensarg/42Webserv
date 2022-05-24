@@ -5,11 +5,12 @@
 #include "config.hpp"
 #include "request.hpp"
 #include "response.hpp"
-
+class Request;
 #define DEFAULT_CONFIG "configs/default.conf"
 
 class Cluster {
 public:
+  //Cluster(void);
   Cluster(std::string configfile = DEFAULT_CONFIG);
   ~Cluster();
 
@@ -17,6 +18,8 @@ public:
   void run(void);
   int read_request(int fd);
   int handle_connection(int client_socket);
+  //find path from uri
+  void find_Path(int fd);
 private:
   std::vector<Config> configs;
   std::vector<Server> servers;
