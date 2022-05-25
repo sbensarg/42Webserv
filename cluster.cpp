@@ -108,7 +108,16 @@ int accept_connection(int server_socket)
   return (client_socket);
 }
 
-
+int Cluster::check_allowed_method(std::vector<std::string> list, std::string method)
+{
+	std::vector<std::string>::iterator it = list.begin();
+	while(it != list.end())
+	{
+		if (*it == method)
+			return (1);
+	}
+	return (0);
+}
 
 void Cluster::find_Path(int fd)
 {
@@ -131,19 +140,23 @@ void Cluster::find_Path(int fd)
 				{
 					std::string last_path = i->first;
 					std::string first_path = i->second.root;
-					std::cout << "last_path => " << last_path << "| uri =>" << uri << "\n";
 					if (uri == last_path)
 					{
-						std::cout << "dkhaal " << "\n";
-						location_full_path = i->second.root + i->first;
-						s.setFullPathLocation(location_full_path);
+						flag = this->check_allowed_method(i->second.allowed_methods, it->second.getmethod());
+						if (flag == 1)
+						{
+							location_full_path = i->second.root + i->first;
+							s.setFullPathLocation(location_full_path);
+						}
+						else
+							s.setStatusCode(405);
 						break;
 					}
 					i++;
 					if (j == 0)
 					{
 						i = it2->get_routes().begin();
-						j = it2->get_routes().size() - 1;
+						j = it2->get_routes().size();
 						size_t pos = 0;
 						pos = uri.find_last_of("/");
 						if (pos != std::string::npos && pos != 0)
@@ -153,13 +166,11 @@ void Cluster::find_Path(int fd)
 						else if (pos == 0)
 							uri = "/";
 					}
-					j--;			
+					j--;		
 				}
-			}
-				
+			}	
 		}
 	}
-
 	std::cout << "full path " << s.getFullPathLocation() << "\n";
 }
 

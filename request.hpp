@@ -31,6 +31,7 @@ public:
 	//getters
 	std::string getRetCntType(void);
 	std::string geturi(void);
+	std::string getmethod(void);
 	void get_port();
 	
 	std::map<std::string, std::string> getMap(void);

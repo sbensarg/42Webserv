@@ -1,6 +1,6 @@
 #include "response.hpp"
 
-Response::Response()
+Response::Response() : status_code(0)
 {
 }
 
@@ -16,6 +16,16 @@ std::string &Response::getFullPathLocation(void)
 void Response::setFullPathLocation(std::string l)
 {
 	this->location = l;
+}
+
+void Response::setStatusCode(int sc)
+{
+	this->status_code = sc;
+}
+
+int & Response::getStatusCode(void)
+{
+	return this->status_code;
 }
 
 int Response::make_response(int client_socket, Request req)

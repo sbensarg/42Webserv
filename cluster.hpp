@@ -20,6 +20,8 @@ public:
   int handle_connection(int client_socket);
   //find path from uri
   void find_Path(int fd);
+  //check allowed method
+  int check_allowed_method(std::vector<std::string> list, std::string method);
 private:
   std::vector<Config> configs;
   std::vector<Server> servers;

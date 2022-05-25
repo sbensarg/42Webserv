@@ -161,6 +161,13 @@ std::string Request::geturi(void)
 	return (value);
 }
 
+std::string Request::getmethod(void)
+{
+	std::string value;
+	value = this->map.at("method");
+	return (value);
+}
+
 std::map<std::string, std::string> Request::getMap(void)
 {
 	return this->map;
