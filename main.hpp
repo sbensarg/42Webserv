@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <sstream>
 #include <arpa/inet.h>
+#include<sys/stat.h>
 
 
 #define RED     "\x1b[31m"

@@ -90,7 +90,10 @@ std::map<std::string, s_route> &Config::get_routes(void)
 {
 	return (this->routes);
 }
-
+std::map<int, std::string> & Config::get_error_pages(void)
+{
+	return (this->error_pages);
+}
 std::pair<std::string, s_route> Config::get_route(std::string &b, std::istringstream &block)
 {
   std::pair<std::string, s_route> ret;
