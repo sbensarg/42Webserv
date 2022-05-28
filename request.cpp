@@ -29,7 +29,7 @@ void Request::append_data(std::string data, int size)
 		}
 		header_length = f + 4;
 	}
-	std::cout << "data { " << this->data << "}\n";
+	//std::cout << " { " << this->data << "}\n";
 		
 }
 
