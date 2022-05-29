@@ -55,10 +55,14 @@ Config::Config(std::string &b)
           //TODO: check if path valid
         }
       else if (line.rfind("location:", 0) == 0)
+      {
           this->routes.insert(this->get_route(line, block));
+      }
       else
         throw ("Config File: Syntax error");
     }
+  if (this->routes.find("/") == this->routes.end())
+    throw ("Config File: location: / missing");
 
 }
 
@@ -138,12 +142,10 @@ std::pair<std::string, s_route> Config::get_route(std::string &b, std::istringst
       else if (b.rfind("redirect_code=") == 0)
         {
           std::istringstream(b.substr(14, b.find(";"))) >> ret.second.redirect_status_code;
-          std::cout << "redirection_status_cod4e = " << ret.second.redirect_status_code << "\n";
         }
       else if (b.rfind("redirect_url=") == 0)
         {
-          ret.second.redirect_url = b.substr(13, b.find(";"));
-          std::cout << "redirect_url = " << ret.second.redirect_url << "\n";
+          ret.second.redirect_url = b.substr(13, b.find(";") - 13);
         }
       else
         throw ("Config File: Syntax error");
