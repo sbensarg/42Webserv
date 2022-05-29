@@ -1,6 +1,6 @@
 #include "response.hpp"
 
-Response::Response() : status_code(0)
+Response::Response() : status_code(200), location_header("")
 {
 }
 
@@ -91,7 +91,9 @@ int Response::check_allowed_method(std::vector<std::string> list, std::string me
 	while(it != list.end())
 	{
 		if (*it == method)
+		{
 			return (1);
+		}
 		it++;
 	}
 	return (0);
@@ -226,6 +228,38 @@ void Response::set_config_id(Config id)
 {
 	this->config_id = id;
 }
+std::string Response::get_location_header(void)
+{
+	return (this->location_header);
+}
+
+void Response::set_location_header(std::string l)
+{
+	this->location_header = l;
+}
+
+void Response::redirection(int status_code, std::string url)
+{
+	set_status_code(status_code);
+	std::string new_url;
+	size_t pos;
+	pos = url.find(";");
+	if (pos != std::string::npos)
+		new_url = url.substr(0, pos);
+	set_location_header(new_url);	
+}
+
+std::string Response::which_traitment(s_route r)
+{
+	if (r.redirect_status_code != 0)
+	{
+		if (r.redirect_url != "")
+			return "Redirection";
+	}
+	else if (r.cgi_path != "")
+		return "CGI";
+	return "Root";
+}
 
 void Response::find_Path(void)
 {
@@ -233,6 +267,7 @@ void Response::find_Path(void)
 	std::string uri;
 	std::string check;
 	int flag = 0;
+	int def = 0;
 	int ret_index = 0;
 	Request id = this->get_server_id();
 	Config conf = this->get_config_id();
@@ -246,43 +281,51 @@ void Response::find_Path(void)
 		std::string first_path = i->second.root;
 		if (uri == last_path)
 		{
-
-			flag = this->check_allowed_method(i->second.allowed_methods, id.getmethod());
-			if (flag == 1)
+			if (this->which_traitment(i->second) == "Redirection")
+				this->redirection(i->second.redirect_status_code, i->second.redirect_url);
+			else if (this->which_traitment(i->second) == "CGI")
 			{
-				last_path = ret_new_location(last_path, 1);
-				location_full_path = first_path + last_path + id.geturi();
-				std::cout << "location_full_path " << location_full_path << "\n"; 
-				this->setFullPathLocation(location_full_path);
-				check = this->checkLocation(this->getFullPathLocation());
-				if (check == "DIR")
+
+			}
+			else
+			{
+				flag = this->check_allowed_method(i->second.allowed_methods, id.getmethod());
+				if (flag == 1)
 				{
-					if (i->second.index.size() != 0)
+					last_path = ret_new_location(last_path, 1);
+					location_full_path = first_path + last_path + id.geturi();
+					std::cout << "location_full_path " << location_full_path << "\n"; 
+					this->setFullPathLocation(location_full_path);
+					check = this->checkLocation(this->getFullPathLocation());
+					if (check == "DIR")
 					{
-						ret_index = this->display_index(i->second.index);
-						if (ret_index == 0)
+						if (i->second.index.size() != 0)
+						{
+							ret_index = this->display_index(i->second.index);
+							if (ret_index == 0)
+							{
+								if (this->check_autoindex(i->second.autoindex) == 0)
+									this->find_error_page(404, conf.get_error_pages());
+							}
+							else if (ret_index == 2)
+								this->find_error_page(403, conf.get_error_pages());
+						}
+						else
 						{
 							if (this->check_autoindex(i->second.autoindex) == 0)
 								this->find_error_page(404, conf.get_error_pages());
 						}
-						else if (ret_index == 2)
-							this->find_error_page(403, conf.get_error_pages());
 					}
+					else if (check == "NOPERMISSIONS")
+						this->find_error_page(403, conf.get_error_pages());
+					else if (check == "NOTFOUND")
+						this->find_error_page(404, conf.get_error_pages());
 					else
-					{
-						if (this->check_autoindex(i->second.autoindex) == 0)
-							this->find_error_page(404, conf.get_error_pages());
-					}
+						this->setFullPathLocation(check);
 				}
-				else if (check == "NOPERMISSIONS")
-					this->find_error_page(403, conf.get_error_pages());
-				else if (check == "NOTFOUND")
-					this->find_error_page(404, conf.get_error_pages());
 				else
-					this->setFullPathLocation(check);
+					this->find_error_page(405, conf.get_error_pages());
 			}
-			else
-				this->find_error_page(405, conf.get_error_pages());
 			break;
 		}
 		i++;
@@ -309,16 +352,13 @@ std::string Response::checkLocation(std::string path)
 		{
 			// it's a file
 			if(!(s.st_mode & S_IRWXU))
-			{
 				return ("NOPERMISSIONS");
-			}
 			else
 				return (path);	
 		}
 	}
 	//error
 	return ("NOTFOUND");
-
 }
 
 int Response::make_response(int client_socket, Request req)
@@ -342,11 +382,12 @@ int Response::make_response(int client_socket, Request req)
 	make_response << "Cache-Control: no-cache, private\r\n";
 	make_response << "Content-Type: " << req.getRetCntType() << "\r\n";
 	make_response << "Content-Length: " << finished_content.length() << "\r\n";
+	if (this->get_location_header() != "")
+		make_response << "Location: " << this->get_location_header() << "\r\n";
 	make_response << "\r\n";
 	make_response << finished_content;
 	// Transfer it to a std::string to send
 	std::string finished_response = make_response.str();
-
 	// Send the HTTP Response
 	if (send(client_socket, finished_response.c_str(), finished_response.length(), 0) <= 0)
 	{

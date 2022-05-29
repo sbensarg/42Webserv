@@ -12,9 +12,16 @@ private:
 	int status_code;
 	Request server_id;
 	Config config_id;
+	std::string location_header;
 public:
 	Response(void);
 	~Response();
+	// define which type of location (redirection, cgi or root)
+	std::string which_traitment(s_route r);
+	// redirection
+	void redirection(int status_code, std::string url);
+	std::string get_location_header(void);
+	void set_location_header(std::string l);
 	//find which server the request should be routed to
 	void which_config(int fd);
 	//get server_id
