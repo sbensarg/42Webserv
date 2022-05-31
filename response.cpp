@@ -1,4 +1,5 @@
 #include "response.hpp"
+#include <errno.h>
 
 Response::Response() : status_code(200), location_header("")
 {
@@ -17,24 +18,32 @@ void Response::setFullPathLocation(std::string l)
 {
 	this->location = l;
 }
+
+std::string Response::get_response_string(void)
+{
+	return (this->response_string);
+}
+
+void Response::set_response_string(std::string res)
+{
+	this->response_string = res;
+}
+
 void Response::set_default_error_page(int sc)
 {
 	this->set_status_code(sc);
 	// Create the HTTP for default error page
-	std::string path = "/Users/sbensarg/Desktop/www/error_pages/.default_error_page.html";
-	std::ofstream html(path);
-	if(!html)
-    {
-        std::cerr<<"Cannot open the default file."<<std::endl;
-        return ;
-    }
+	//std::string path = "/Users/sbensarg/Desktop/www/error_pages/.default_error_page.html";
+	//std::ofstream html(path);
+	std::stringstream html;
+
 	html << "<h1 style='color:red'>Error ";
 	html << this->get_status_code();
 	html << " :-(</h1>";
 	html << "<p>this is the default error page!!!</p>";
-	html.close();
 	// Transfer it to a std::string to send
-	this->setFullPathLocation(path);
+	//this->setFullPathLocation(path);
+	this->set_response_string(html.str());
 
 }
 void Response::find_location_error(std::string location)
@@ -54,12 +63,13 @@ void Response::find_location_error(std::string location)
 			location_full_path = first_path + location;
 			this->setFullPathLocation(location_full_path);
 			check = this->checkLocation(this->getFullPathLocation());
-			if (check == "NOPERMISSIONS")
+			if (check == "NOPERMISSIONS" || check == "DIR")
 				this->set_default_error_page(403);
 			else if (check == "NOTFOUND")
 				this->set_default_error_page(404);
 			else
-				this->setFullPathLocation(check);
+				this->get_string_from_path(check);
+				//this->setFullPathLocation(check);
 			return ;
 		}			
 		i++;
@@ -134,7 +144,8 @@ int Response::display_index(std::vector<std::string> list)
 		ret = this->checkLocation(full_path_with_index);
 		if (ret == full_path_with_index)
 		{
-			this->setFullPathLocation(full_path_with_index);
+			this->get_string_from_path(full_path_with_index);
+			//this->setFullPathLocation(full_path_with_index);
 			return (1);
 		}
 		else if (ret == "NOPERMISSIONS")
@@ -149,14 +160,9 @@ int Response::check_autoindex(bool autoindex)
 {
 	if (autoindex == 1)
 	{
-		std::string path_autoindex = "/Users/sbensarg/Desktop/www/.autoindex.html";
-		std::ofstream html(path_autoindex);
-		if(!html)
-		{
-			std::cerr<<"Cannot open the default file."<<std::endl;
-			return 1;
-		}
-
+		//std::string path_autoindex = "/Users/sbensarg/Desktop/www/.autoindex.html";
+	//	std::ofstream html(path_autoindex);
+		std::stringstream html;
 		DIR *dir;
 		struct dirent *ent;
 		std::string path;
@@ -169,14 +175,25 @@ int Response::check_autoindex(bool autoindex)
 			while ((ent = readdir (dir)) != NULL)
 			{
 				std::string file(std::string(ent->d_name));
-				 if (file[0] != '/' || !(this->server_id.geturi().find_last_of("/")))
-        			file = "/" + file;
+				std::string uri = this->server_id.geturi();
+				size_t pos;
+	
+				pos = uri.find("/");
+				if (pos != std::string::npos && pos != 0)
+				{
+					if (uri[pos + 1] == '/')
+						uri =  this->server_id.geturi().substr(pos + 1, uri.length());
+				}
+				else if (pos == 0 && uri[pos + 1] == 0)
+					uri = "";
+				file = "/" + file;
 				html << "\t\t<p><a href=\"http://" + this->server_id.host + ":" <<\
-        			this->server_id.port << this->server_id.geturi() +  file + "\">" +  file + "</a></p>\n";
+        			this->server_id.port << uri +  file + "\">" +  file + "</a></p>\n";
 				std::cout << "files => " << ent->d_name << "\n";
 			}
 			closedir (dir);
-			this->setFullPathLocation(path_autoindex);
+			this->set_response_string(html.str());
+			//this->setFullPathLocation(path_autoindex);
 		}
 		else
 		{
@@ -184,7 +201,7 @@ int Response::check_autoindex(bool autoindex)
 			perror ("");
 			return EXIT_FAILURE;
 		}
-		//std::cout << "AUTOINDEX ON";
+
 		return (1);
 	}
 	return (0);
@@ -321,7 +338,9 @@ void Response::find_Path(void)
 					else if (check == "NOTFOUND")
 						this->find_error_page(404, conf.get_error_pages());
 					else
-						this->setFullPathLocation(check);
+						this->get_string_from_path(check);
+					
+						//this->setFullPathLocation(check);
 				}
 				else
 					this->find_error_page(405, conf.get_error_pages());
@@ -361,20 +380,36 @@ std::string Response::checkLocation(std::string path)
 	return ("NOTFOUND");
 }
 
-int Response::make_response(int client_socket, Request req)
+void Response::get_string_from_path(std::string path)
 {
-
-	this->which_config(client_socket);
-	this->find_Path();
-	// Transfer the whole HTML to a std::string
-	std::string location;
-	location = this->getFullPathLocation();
-	std::cout << "location" << location << "\n"; 
-	std::ifstream grab_content(location);
+	std::ifstream grab_content(path);
 	std::stringstream make_content;
+
 	make_content << grab_content.rdbuf();
 	std::string finished_content;
 	finished_content = make_content.str();
+
+	this->set_response_string(finished_content);
+}
+
+int Response::make_response(int client_socket, Request req)
+{
+	this->which_config(client_socket);
+	if (req.check_all_keys() == false)
+		this->find_error_page(400, this->get_config_id().get_error_pages());
+	else
+		this->find_Path();
+	
+	// Transfer the whole HTML to a std::string
+	std::string location;
+	location = this->getFullPathLocation();
+	std::cout << "location " << location << "\n";
+
+	// std::ifstream grab_content(location);
+	// std::stringstream make_content;
+	// make_content << grab_content.rdbuf();
+	std::string finished_content;
+	finished_content = this->get_response_string();
 
 	// Create the HTTP Response
 	std::stringstream make_response;
@@ -389,12 +424,25 @@ int Response::make_response(int client_socket, Request req)
 	// Transfer it to a std::string to send
 	std::string finished_response = make_response.str();
 	// Send the HTTP Response
-	if (send(client_socket, finished_response.c_str(), finished_response.length(), 0) <= 0)
-	{
-          perror("Send failed");
-          exit(EXIT_FAILURE);
-    }
+	std::cout << "Finished response length == " << finished_response.length() << "\n";
 	
+	int bytes_sent;
+	int server_sock;
+	int send_left;
+	int send_rc;
+	const char *message_ptr = finished_response.c_str();
+	send_left = finished_response.length();
+
+	while (send_left > 0)
+	{
+		send_rc = send(client_socket, message_ptr, send_left, 0);
+		if (send_rc == -1)
+			break;
+
+		send_left -= send_rc;
+		message_ptr += send_rc;
+		usleep(200);
+	}
 	
 	return (1);
 }

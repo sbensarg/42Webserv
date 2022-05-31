@@ -16,6 +16,12 @@ public:
 	int port;
 	std::string host;
 	std::map<std::string, std::string> map;
+	std::map<std::string, std::string>::iterator it;
+	int flag;
+	std::string method;
+	int fd;
+	int pipes[2];
+	bool request_read;
 public:
 	Request(void);
 	Request(std::string &data, int size);
@@ -33,7 +39,10 @@ public:
 	std::string geturi(void);
 	std::string getmethod(void);
 	void get_port();
-	
+	// check all keys
+	bool check_all_keys(void);
+	//setters
+	void set_method(std::string method);
 	std::map<std::string, std::string> getMap(void);
 	//affichage request
 	void affichage_request();

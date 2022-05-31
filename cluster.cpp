@@ -134,11 +134,9 @@ int Cluster::read_request(int fd)
 	if (it != this->requests.end())
 	{
 		it->second.append_data(str, recb);
-		if (it->second.check_recv_all_data() == 1)
+		std::cout << "ret check all keys " << it->second.check_all_keys() << "\n";
+		if(it->second.request_read == true || it->second.check_all_keys() == false)
 		{
-			it->second.parse_request();
-			it->second.affichage_request();
-
 			return (1);
 		}
   }
@@ -175,11 +173,12 @@ void Cluster::run(void)
     for(std::vector<Server>::iterator it = servers.begin(); it != servers.end(); it++)
     {
       int socket_fd = (*it).getFd();
+
       tmp_read = this->read[socket_fd];
       tmp_write = this->write[socket_fd];
       if (select(setsize, &tmp_read, &tmp_write, NULL, &tv) < 0)
         throw ("select: error");
-      for(int i = 0; i <= setsize; i++)
+      for(int i = 0; i < setsize; i++)
       {
         if (FD_ISSET(i, &tmp_read))
         {
@@ -196,6 +195,7 @@ void Cluster::run(void)
              	if (this->read_request(i) == 1)
 				{
 					FD_CLR(i, &this->read[socket_fd]);
+					FD_CLR(i, &tmp_read);
 					FD_SET(i, &this->write[socket_fd]);
 				}
           }
@@ -203,7 +203,12 @@ void Cluster::run(void)
         if (FD_ISSET(i, &tmp_write))
         {
 			if (this->handle_connection(i) == 1)
+			{
 				FD_CLR(i, &this->write[socket_fd]);
+				FD_CLR(i, &tmp_write);
+
+
+			}
         }
       }
     }

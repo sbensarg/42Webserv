@@ -13,9 +13,13 @@ private:
 	Request server_id;
 	Config config_id;
 	std::string location_header;
+	std::string response_string;
 public:
 	Response(void);
 	~Response();
+	void get_string_from_path(std::string path);
+	std::string get_response_string(void);
+	void set_response_string(std::string res);
 	// define which type of location (redirection, cgi or root)
 	std::string which_traitment(s_route r);
 	// redirection

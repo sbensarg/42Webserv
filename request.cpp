@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-Request::Request(void) : total_size(0), data(""), cnt_size(0), header_length(0), body("")
+Request::Request(void) : total_size(0), data(""), cnt_size(0), header_length(0), body(""), flag(0)
 {
 	
 }
@@ -13,37 +13,70 @@ Request::~Request()
 
 void Request::append_data(std::string data, int size)
 { 
+	int check = 0;
 	int f = 0;
-	this->total_size += size;
-	this->data.append(data);
-	f = this->data.find("\r\n\r\n");
-	if (f != std::string::npos)
+	if (total_size == 0)
 	{
-		std::string cnt = "Content-Length: ";
-		int pos = this->data.find(cnt);
-		if (pos != std::string::npos)
+		this->data.append(data);
+		f = this->data.find("\r\n\r\n");
+		if (f != std::string::npos)
 		{
-			int len = cnt.length() + pos;
-			const char *s = this->data.c_str();
-			cnt_size = std::atoi(s + len);
+			this->parse_request();
+			this->total_size += size;
+			header_length = f + 4;
+			std::cout << header_length << " -------------\n";
+			// std::string cnt = "Content-Length: ";
+			// int pos = this->data.find(cnt);
+			// if (pos != std::string::npos)
+			// {
+			// 	int len = cnt.length() + pos;
+			// 	const char *s = this->data.c_str();
+			// 	cnt_size = std::atoi(s + len);
+			// }
+			it = this->map.find("Content-Length");
+			if (it != this->map.end())
+				cnt_size = std::atoi(it->second.c_str());
+			if (cnt_size > 0 && this->check_all_keys() == true)
+			{
+				if (this->getmethod() == "POST")
+				{
+					std::string wr = this->data.substr(header_length);
+					pipe(pipes);
+					write(pipes[1], wr.c_str(), wr.length());
+					check = 1;
+				}
+			}
 		}
-		header_length = f + 4;
+		else if (total_size < cnt_size + header_length && check == 1)
+		{
+			write(pipes[1], data.c_str(), size);
+			total_size += size;
+		}
+		if (total_size == cnt_size + header_length && total_size > 0)
+			request_read = true;
 	}
+
 	//std::cout << " { " << this->data << "}\n";
 		
 }
-
-int Request::check_recv_all_data()
+bool Request::check_all_keys(void)
 {
-	int size_request = 0;
-	size_request = this->cnt_size + this->header_length;
-	if (this->total_size == size_request && this->total_size > 0)
-	{	
-		std::cout << "\n\nDone. Received a total of: " << this->total_size << "bytes\n\n";
-		return (1);
-	}
-	return(0);
-} 
+	if (this->check_method() == true 
+			&& this->check_http_vesion() == true && this->flag == 0)
+		return (true);
+	return (false);
+}
+// int Request::check_recv_all_data()
+// {
+// 	int size_request = 0;
+// 	size_request = this->cnt_size + this->header_length;
+// 	if (this->total_size == size_request && this->total_size > 0)
+// 	{	
+// 		std::cout << "\n\nDone. Received a total of: " << this->total_size << "bytes\n\n";
+// 		return (1);
+// 	}
+// 	return(0);
+// } 
 
 void Request::parse_request()
 {
@@ -71,11 +104,28 @@ void Request::parse_request()
 	while (std::getline(rh, token, '\r') && token != "\n")
 	{
 		size_t pos = token.find(":");
-		std::string name = token.substr(1, pos - 1);
-		std::string value = token.substr(pos + 2);
-		this->map.insert(std::pair<std::string, std::string>(name, value));
+		if (pos != std::string::npos)
+		{
+			std::string name = token.substr(1, pos - 1);
+			std::string value = token.substr(pos + 2);
+			this->map.insert(std::pair<std::string, std::string>(name, value));
+		}
 	}
 	get_port();
+
+	// it = this->map.find("method");
+	// if (it != this->map.end())
+	// {
+	// 	if (it->second != "" && it->second == "POST")
+	// 	{
+	// 		std::size_t f = request_header.find("\r\n\r\n");
+	// 		if (f != std::string::npos)
+	// 		{
+	// 			this->body = request_header.substr(f + 4);
+	// 		}
+	// 	}
+	// }
+	// std::cout << "body ==>" << this->body << "\n";
 	// if (this->map.at("method") == "POST")
 	// {
 	// 	std::size_t f = request_header.find("\r\n\r\n");
@@ -88,16 +138,28 @@ void Request::parse_request()
 
 bool Request::check_http_vesion()
 {
-	if (this->map.at("ver") == "HTTP/1.1")
-		return (true);
+	it = this->map.find("ver");
+	if (it != this->map.end())
+	{
+		if (it->second != "" && it->second == "HTTP/1.1")
+			return (true);
+	}
 	return (false);
 }
 
 bool Request::check_method()
 {
-	if (this->map.at("method") == "POST" || this->map.at("method") == "GET"
-	|| this->map.at("method") == "DELETE" )
-	return (true);
+	it = this->map.find("method");
+	if (it != this->map.end())
+	{
+		if (it->second != "" && (it->second == "POST" || it->second == "GET"
+			|| it->second == "DELETE"))
+		{
+			this->set_method(it->second);
+			return (true);
+		}
+			
+	}
 	return (false);
 }
 
@@ -108,7 +170,7 @@ void Request::ret_cnt_Type()
 	std::string line;
 	std::string name, value, val = "";
 	size_t i, pos;
-	value = map.at("uri");
+	value = this->geturi();
 	i = value.find(".");
 	if (i != std::string::npos)
 		extention = value.substr(i + 1);
@@ -133,19 +195,26 @@ void Request::get_port()
 	std::string value;
 	
 	size_t i = 0;
-	value = this->map.at("Host");
-	i = value.find(":");
-	if (i != std::string::npos)
+	
+	it = this->map.find("Host");
+	if (it != this->map.end() && it->second != "")
 	{
-		this->host = value.substr(0, i);
-		std::string s(value, i + 1);
-		this->port = std::atoi(s.c_str());
+		value = it->second;
+		i = it->second.find(":");
+		if (i != std::string::npos)
+		{
+			this->host = value.substr(0, i);
+			std::string s(value, i + 1);
+			this->port = std::atoi(s.c_str());
+		}
+		else
+		{
+			this->port = 80;
+			this->host = value;
+		}
 	}
 	else
-	{
-		this->port = 80;
-		this->host = value;
-	}
+		this->flag = 1;
 
 }
 
@@ -156,16 +225,23 @@ std::string Request::getRetCntType(void)
 
 std::string Request::geturi(void)
 {
-	std::string value;
-	value = this->map.at("uri");
+	std::string value = "";
+	it = this->map.find("uri");
+	if (it != this->map.end())
+	{
+		if (it->second != "")
+			value = it->second;
+	}
 	return (value);
+}
+void Request::set_method(std::string method)
+{
+	this->method = method;
 }
 
 std::string Request::getmethod(void)
 {
-	std::string value;
-	value = this->map.at("method");
-	return (value);
+	return (this->method);
 }
 
 std::map<std::string, std::string> Request::getMap(void)
