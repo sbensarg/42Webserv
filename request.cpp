@@ -25,14 +25,6 @@ void Request::append_data(std::string data, int size)
 			this->total_size += size;
 			header_length = f + 4;
 			std::cout << header_length << " -------------\n";
-			// std::string cnt = "Content-Length: ";
-			// int pos = this->data.find(cnt);
-			// if (pos != std::string::npos)
-			// {
-			// 	int len = cnt.length() + pos;
-			// 	const char *s = this->data.c_str();
-			// 	cnt_size = std::atoi(s + len);
-			// }
 			it = this->map.find("Content-Length");
 			if (it != this->map.end())
 				cnt_size = std::atoi(it->second.c_str());
@@ -55,10 +47,8 @@ void Request::append_data(std::string data, int size)
 		if (total_size == cnt_size + header_length && total_size > 0)
 			request_read = true;
 	}
-
-	//std::cout << " { " << this->data << "}\n";
 		
-}
+
 bool Request::check_all_keys(void)
 {
 	if (this->check_method() == true 
@@ -66,17 +56,7 @@ bool Request::check_all_keys(void)
 		return (true);
 	return (false);
 }
-// int Request::check_recv_all_data()
-// {
-// 	int size_request = 0;
-// 	size_request = this->cnt_size + this->header_length;
-// 	if (this->total_size == size_request && this->total_size > 0)
-// 	{	
-// 		std::cout << "\n\nDone. Received a total of: " << this->total_size << "bytes\n\n";
-// 		return (1);
-// 	}
-// 	return(0);
-// } 
+
 
 void Request::parse_request()
 {
@@ -112,28 +92,7 @@ void Request::parse_request()
 		}
 	}
 	get_port();
-
-	// it = this->map.find("method");
-	// if (it != this->map.end())
-	// {
-	// 	if (it->second != "" && it->second == "POST")
-	// 	{
-	// 		std::size_t f = request_header.find("\r\n\r\n");
-	// 		if (f != std::string::npos)
-	// 		{
-	// 			this->body = request_header.substr(f + 4);
-	// 		}
-	// 	}
-	// }
-	// std::cout << "body ==>" << this->body << "\n";
-	// if (this->map.at("method") == "POST")
-	// {
-	// 	std::size_t f = request_header.find("\r\n\r\n");
-	// 	if (f != std::string::npos)
-	// 		{
-	// 		this->body = request_header.substr(f + 4);
-	// 		}
-	// }
+	this->ret_cnt_Type();
 }
 
 bool Request::check_http_vesion()
@@ -166,7 +125,7 @@ bool Request::check_method()
 void Request::ret_cnt_Type()
 {
 	std::string extention;
-	std::ifstream infile("request/mime.txt");
+	std::ifstream infile("mime.txt");
 	std::string line;
 	std::string name, value, val = "";
 	size_t i, pos;
@@ -263,7 +222,4 @@ void Request::affichage_request()
 
 	if (this->check_method() == true)
 		std::cout << "method allowed \n";
-	//this->get_port();
-	//std::cout << "port " << this->port << " host " << this->host << "\n"; 
-	std::cout << "POST BODY ==> {" << this->body << "}\n";
 }

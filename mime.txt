@@ -73,3 +73,4 @@ zip application/zip
 3gp2 video/3gpp2
 3gp2_DOES_NOT_CONTAIN_VIDEO audio/3gpp2
 7z application/x-7z-compressed
+php application/x-httpd-php

@@ -32,9 +32,6 @@ void Response::set_response_string(std::string res)
 void Response::set_default_error_page(int sc)
 {
 	this->set_status_code(sc);
-	// Create the HTTP for default error page
-	//std::string path = "/Users/sbensarg/Desktop/www/error_pages/.default_error_page.html";
-	//std::ofstream html(path);
 	std::stringstream html;
 
 	html << "<h1 style='color:red'>Error ";
@@ -42,10 +39,10 @@ void Response::set_default_error_page(int sc)
 	html << " :-(</h1>";
 	html << "<p>this is the default error page!!!</p>";
 	// Transfer it to a std::string to send
-	//this->setFullPathLocation(path);
 	this->set_response_string(html.str());
 
 }
+
 void Response::find_location_error(std::string location)
 {
 	// todo : FIND LOCATION OF ERRPR PAGE
@@ -69,7 +66,6 @@ void Response::find_location_error(std::string location)
 				this->set_default_error_page(404);
 			else
 				this->get_string_from_path(check);
-				//this->setFullPathLocation(check);
 			return ;
 		}			
 		i++;
@@ -145,7 +141,6 @@ int Response::display_index(std::vector<std::string> list)
 		if (ret == full_path_with_index)
 		{
 			this->get_string_from_path(full_path_with_index);
-			//this->setFullPathLocation(full_path_with_index);
 			return (1);
 		}
 		else if (ret == "NOPERMISSIONS")
@@ -160,14 +155,11 @@ int Response::check_autoindex(bool autoindex)
 {
 	if (autoindex == 1)
 	{
-		//std::string path_autoindex = "/Users/sbensarg/Desktop/www/.autoindex.html";
-	//	std::ofstream html(path_autoindex);
 		std::stringstream html;
 		DIR *dir;
 		struct dirent *ent;
 		std::string path;
 		path = this->getFullPathLocation();
-		std::cout << "path " << path << "\n";
 
 		if ((dir = opendir (path.c_str())) != NULL)
 		{
@@ -187,13 +179,12 @@ int Response::check_autoindex(bool autoindex)
 				else if (pos == 0 && uri[pos + 1] == 0)
 					uri = "";
 				file = "/" + file;
-				html << "\t\t<p><a href=\"http://" + this->server_id.host + ":" <<\
-        			this->server_id.port << uri +  file + "\">" +  file + "</a></p>\n";
-				std::cout << "files => " << ent->d_name << "\n";
+				html << "\t\t<p><a href=\"http://" + this->get_server_id().host + ":" <<\
+        			this->get_server_id().port << uri +  file + "\">" +  file + "</a></p>\n";
 			}
 			closedir (dir);
 			this->set_response_string(html.str());
-			//this->setFullPathLocation(path_autoindex);
+
 		}
 		else
 		{
@@ -216,22 +207,31 @@ void Response::which_config(int fd)
 	{
 		for(std::vector<Config>::iterator it2 = Cluster::getInstance().configs.begin(); it2 != Cluster::getInstance().configs.end(); it2++)
 		{
+			if (it->second.host == "localhost")
+				it->second.host = "127.0.0.1";
 			if (it->second.host == it2->get_listen().host && it->second.port == it2->get_listen().port)
 			{
 				this->set_config_id(*it2);
 				this->set_server_id(it->second);
 				break;
 			}
+			else if (it->second.host == it2->get_servername() && it->second.port == it2->get_listen().port)
+			{
+				this->set_config_id(*it2);
+				this->set_server_id(it->second);
+				break;
+			}
+
 		}
 	}
 }
 
-Request Response::get_server_id(void)
+Request &  Response::get_server_id(void)
 {
 	return (this->server_id);
 }
 
-void Response::set_server_id(Request id)
+void Response::set_server_id(Request & id)
 {
 	this->server_id = id;
 }
@@ -339,7 +339,7 @@ void Response::find_Path(void)
 						this->find_error_page(404, conf.get_error_pages());
 					else
 						this->get_string_from_path(check);
-					
+				
 						//this->setFullPathLocation(check);
 				}
 				else
@@ -382,6 +382,7 @@ std::string Response::checkLocation(std::string path)
 
 void Response::get_string_from_path(std::string path)
 {
+	// Transfer the whole HTML to a std::string
 	std::ifstream grab_content(path);
 	std::stringstream make_content;
 
@@ -399,18 +400,9 @@ int Response::make_response(int client_socket, Request req)
 		this->find_error_page(400, this->get_config_id().get_error_pages());
 	else
 		this->find_Path();
-	
-	// Transfer the whole HTML to a std::string
-	std::string location;
-	location = this->getFullPathLocation();
-	std::cout << "location " << location << "\n";
 
-	// std::ifstream grab_content(location);
-	// std::stringstream make_content;
-	// make_content << grab_content.rdbuf();
 	std::string finished_content;
 	finished_content = this->get_response_string();
-
 	// Create the HTTP Response
 	std::stringstream make_response;
 	make_response << "HTTP/1.1 " << this->get_status_code() << "\r\n";
@@ -424,7 +416,6 @@ int Response::make_response(int client_socket, Request req)
 	// Transfer it to a std::string to send
 	std::string finished_response = make_response.str();
 	// Send the HTTP Response
-	std::cout << "Finished response length == " << finished_response.length() << "\n";
 	
 	int bytes_sent;
 	int server_sock;

@@ -137,6 +137,7 @@ int Cluster::read_request(int fd)
 		std::cout << "ret check all keys " << it->second.check_all_keys() << "\n";
 		if(it->second.request_read == true || it->second.check_all_keys() == false)
 		{
+			it->second.affichage_request();
 			return (1);
 		}
   }
