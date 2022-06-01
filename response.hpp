@@ -32,7 +32,7 @@ public:
 	void which_config(int fd);
 	//get server_id
 	Request &get_server_id(void);
-	void set_server_id(Request id);
+	void set_server_id(Request & id);
 	//get config_id
 	Config get_config_id(void);
 	void set_config_id(Config id);

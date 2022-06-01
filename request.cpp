@@ -110,28 +110,7 @@ void Request::parse_request()
 	}
 	get_port();
 	this->ret_cnt_Type();
-
-	// it = this->map.find("method");
-	// if (it != this->map.end())
-	// {
-	// 	if (it->second != "" && it->second == "POST")
-	// 	{
-	// 		std::size_t f = request_header.find("\r\n\r\n");
-	// 		if (f != std::string::npos)
-	// 		{
-	// 			this->body = request_header.substr(f + 4);
-	// 		}
-	// 	}
-	// }
-	// std::cout << "body ==>" << this->body << "\n";
-	// if (this->map.at("method") == "POST")
-	// {
-	// 	std::size_t f = request_header.find("\r\n\r\n");
-	// 	if (f != std::string::npos)
-	// 		{
-	// 		this->body = request_header.substr(f + 4);
-	// 		}
-	// }
+	this->check_method();
 }
 
 bool Request::check_http_vesion()
@@ -147,16 +126,22 @@ bool Request::check_http_vesion()
 
 bool Request::check_method()
 {
+	std::string methods[7] = {"POST", "GET", "DELETE", "PUT", "COPY", "OPTIONS", "PATCH"};
 	it = this->map.find("method");
 	if (it != this->map.end())
 	{
-		if (it->second != "" && (it->second == "POST" || it->second == "GET"
-			|| it->second == "DELETE"))
+		if (it->second != "")
 		{
-			this->set_method(it->second);
-			return (true);
+			for (int i = 0; i < 7; i++)
+			{
+				if (methods[i] == it->second)
+				{
+					this->set_method(it->second);
+					return (true);
+				}
+			}
 		}
-			
+		
 	}
 	return (false);
 }

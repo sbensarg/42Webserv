@@ -39,6 +39,7 @@ public:
 	std::string getRetCntType(void);
 	std::string geturi(void);
 	std::string getmethod(void);
+	void find_method(void);
 	void get_port();
 	// check all keys
 	bool check_all_keys(void);

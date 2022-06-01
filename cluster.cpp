@@ -134,8 +134,10 @@ int Cluster::read_request(int fd)
   if (it != this->requests.end())
     {
       it->second.append_data(buff, recb);
+	 
       if(it->second.request_read == true || it->second.check_all_keys() == false)
         {
+			
           return (1);
         }
     }

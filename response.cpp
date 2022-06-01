@@ -97,9 +97,7 @@ int Response::check_allowed_method(std::vector<std::string> list, std::string me
 	while(it != list.end())
 	{
 		if (*it == method)
-		{
 			return (1);
-		}
 		it++;
 	}
 	return (0);
@@ -201,10 +199,10 @@ int Response::check_autoindex(bool autoindex)
 void Response::which_config(int fd)
 {
 	std::map<int, Request>::iterator it;
-
 	it = Cluster::getInstance().requests.find(fd);
 	if (it != Cluster::getInstance().requests.end())
 	{
+		
 		for(std::vector<Config>::iterator it2 = Cluster::getInstance().configs.begin(); it2 != Cluster::getInstance().configs.end(); it2++)
 		{
 			if (it->second.host == "localhost")
@@ -231,7 +229,7 @@ Request &Response::get_server_id(void)
 	return (this->server_id);
 }
 
-void Response::set_server_id(Request id)
+void Response::set_server_id(Request & id)
 {
 	this->server_id = id;
 }
@@ -287,7 +285,7 @@ void Response::find_Path(void)
 	Request id = this->get_server_id();
 	Config conf = this->get_config_id();
 
-	uri = id.geturi(); 
+	uri = id.geturi();
 	std::map<std::string, s_route>::iterator i = conf.get_routes().begin();
 	int j = conf.get_routes().size() - 1;
 	while (i != conf.get_routes().end())
