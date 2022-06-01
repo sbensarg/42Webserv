@@ -1,3 +1,4 @@
+php application/x-www-form-urlencoded;charset=utf-8
 aac audio/aac
 abw application/x-abiword
 ai application/postscript

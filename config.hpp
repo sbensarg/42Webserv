@@ -28,6 +28,7 @@ struct s_route
     this->root = c.root;
     this->autoindex = c.autoindex;
     this->index = c.index;
+    this->cgi_path = c.cgi_path;
   }
 };
 

@@ -1,7 +1,8 @@
 #include "main.hpp"
 #include "cluster.hpp"
 
-int main(int ac, char **av)
+
+int main(int ac, char **av, char **envp)
 {
   if (ac == 2)
     {
@@ -9,7 +10,7 @@ int main(int ac, char **av)
 
       try {
         // Cluster c(file);
-		Cluster::getInstance().parse(file);
+        Cluster::getInstance().parse(file);
 
         // c.setup();
         // c.run();

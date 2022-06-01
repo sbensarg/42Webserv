@@ -24,15 +24,6 @@ void Request::append_data(std::string data, int size)
 			this->parse_request();
 			this->total_size += size;
 			header_length = f + 4;
-			std::cout << header_length << " -------------\n";
-			// std::string cnt = "Content-Length: ";
-			// int pos = this->data.find(cnt);
-			// if (pos != std::string::npos)
-			// {
-			// 	int len = cnt.length() + pos;
-			// 	const char *s = this->data.c_str();
-			// 	cnt_size = std::atoi(s + len);
-			// }
 			it = this->map.find("Content-Length");
 			if (it != this->map.end())
 				cnt_size = std::atoi(it->second.c_str());
@@ -44,11 +35,13 @@ void Request::append_data(std::string data, int size)
 					pipe(pipes);
 					write(pipes[1], wr.c_str(), wr.length());
 					check = 1;
+					std::cout << wr << "\n";
 				}
 			}
 		}
 		else if (total_size < cnt_size + header_length && check == 1)
 		{
+			std::cout << data << "\n";
 			write(pipes[1], data.c_str(), size);
 			total_size += size;
 		}
@@ -81,6 +74,7 @@ bool Request::check_all_keys(void)
 void Request::parse_request()
 {
 	size_t i;
+	std::string url;
 	std::string first_line;
 	std::string first[3] = {"method", "uri", "ver"};
 
@@ -94,7 +88,19 @@ void Request::parse_request()
 		int j = 0;
 		while (std::getline(raw, seg, ' ') && j < 3)
 		{
-			this->map.insert(std::pair<std::string, std::string>(first[j++], seg));
+			if (j == 1)
+				url = seg;
+			else
+				this->map.insert(std::pair<std::string, std::string>(first[j], seg));
+			j++;
+		}
+		std::size_t del = url.find_first_of("?");
+		if (del == std::string::npos)
+			this->map.insert(std::pair<std::string, std::string>(first[1], url));
+		else
+		{
+			this->map.insert(std::pair<std::string, std::string>(first[1], url.substr(0, del)));
+			this->map.insert(std::pair<std::string, std::string>("GET_params", url.substr(del + 1)));
 		}
 	}
 	std::string request_header;
@@ -112,7 +118,7 @@ void Request::parse_request()
 		}
 	}
 	get_port();
-
+	this->ret_cnt_Type();
 	// it = this->map.find("method");
 	// if (it != this->map.end())
 	// {
@@ -166,7 +172,7 @@ bool Request::check_method()
 void Request::ret_cnt_Type()
 {
 	std::string extention;
-	std::ifstream infile("request/mime.txt");
+	std::ifstream infile("mime.txt");
 	std::string line;
 	std::string name, value, val = "";
 	size_t i, pos;
