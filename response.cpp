@@ -226,12 +226,12 @@ void Response::which_config(int fd)
 	}
 }
 
-Request &  Response::get_server_id(void)
+Request &Response::get_server_id(void)
 {
 	return (this->server_id);
 }
 
-void Response::set_server_id(Request & id)
+void Response::set_server_id(Request id)
 {
 	this->server_id = id;
 }
@@ -273,8 +273,6 @@ std::string Response::which_traitment(s_route r)
 		if (r.redirect_url != "")
 			return "Redirection";
 	}
-	else if (r.cgi_path != "")
-		return "CGI";
 	return "Root";
 }
 
@@ -300,10 +298,6 @@ void Response::find_Path(void)
 		{
 			if (this->which_traitment(i->second) == "Redirection")
 				this->redirection(i->second.redirect_status_code, i->second.redirect_url);
-			else if (this->which_traitment(i->second) == "CGI")
-			{
-
-			}
 			else
 			{
 				flag = this->check_allowed_method(i->second.allowed_methods, id.getmethod());
@@ -382,11 +376,44 @@ std::string Response::checkLocation(std::string path)
 
 void Response::get_string_from_path(std::string path)
 {
-	// Transfer the whole HTML to a std::string
-	std::ifstream grab_content(path);
+	std::ifstream grab_content;
 	std::stringstream make_content;
+	Config conf = get_config_id();
+	size_t n = path.find_last_of(".");
+	std::string ext = path.substr(n);
+	std::map<std::string, s_route> routes = conf.get_routes();
+	if (n != std::string::npos && routes.find(ext) != routes.end())
+	{
+		std::stringstream tmp;
+		std::string hea;
+		bool t = 0;
+		cgi c(this->get_server_id(), routes[ext], path);
+		grab_content.open(c.get_output());
+		tmp << grab_content.rdbuf();
+		while (std::getline(tmp, hea))
+		{
+			hea += "\n";
+			if (t == 1)
+				make_content << hea;
+			else if (t == 0)
+			{
+				size_t pos = hea.find(":");
+				if (pos != std::string::npos)
+				{
+					std::string name = hea.substr(0, pos);
+					std::string value = hea.substr(pos + 2, hea.length() - (name.length() + 3));
+					this->response_headers.insert(std::pair<std::string, std::string>(name, value));
+				}
+			}
+			if (hea == "\r\n")
+				t = 1;
+		}
+	}
+	else {
+		grab_content.open(path);
+		make_content << grab_content.rdbuf();
+	}
 
-	make_content << grab_content.rdbuf();
 	std::string finished_content;
 	finished_content = make_content.str();
 
@@ -400,6 +427,10 @@ int Response::make_response(int client_socket, Request req)
 		this->find_error_page(400, this->get_config_id().get_error_pages());
 	else
 		this->find_Path();
+	
+	// Transfer the whole HTML to a std::string
+	std::string location;
+	location = this->getFullPathLocation();
 
 	std::string finished_content;
 	finished_content = this->get_response_string();
@@ -407,7 +438,10 @@ int Response::make_response(int client_socket, Request req)
 	std::stringstream make_response;
 	make_response << "HTTP/1.1 " << this->get_status_code() << "\r\n";
 	make_response << "Cache-Control: no-cache, private\r\n";
-	make_response << "Content-Type: " << req.getRetCntType() << "\r\n";
+	if (this->response_headers.find("Content-type") != this->response_headers.end())
+		make_response << "Content-Type: " << this->response_headers["Content-type"] << "\r\n";
+	else
+		make_response << "Content-Type: " << req.getRetCntType() << "\r\n";
 	make_response << "Content-Length: " << finished_content.length() << "\r\n";
 	if (this->get_location_header() != "")
 		make_response << "Location: " << this->get_location_header() << "\r\n";
@@ -417,8 +451,6 @@ int Response::make_response(int client_socket, Request req)
 	std::string finished_response = make_response.str();
 	// Send the HTTP Response
 	
-	int bytes_sent;
-	int server_sock;
 	int send_left;
 	int send_rc;
 	const char *message_ptr = finished_response.c_str();

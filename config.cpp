@@ -124,7 +124,6 @@ std::pair<std::string, s_route> Config::get_route(std::string &b, std::istringst
       else if (b.rfind("path=") == 0)
         {
           ret.second.cgi_path = b.substr(5, b.find(";") - 5);
-          //TODO: check if path valid
         }
       else if (b.rfind("allowed_methods=") == 0)
         {

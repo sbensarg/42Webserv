@@ -1,6 +1,7 @@
 #pragma once
 #include "request.hpp"
- #include "cluster.hpp"
+#include "cluster.hpp"
+#include "cgi.hpp"
 
 // class Cluster;
 // class Request;
@@ -14,6 +15,7 @@ private:
 	Config config_id;
 	std::string location_header;
 	std::string response_string;
+	std::map<std::string, std::string> response_headers;
 public:
 	Response(void);
 	~Response();
@@ -29,8 +31,8 @@ public:
 	//find which server the request should be routed to
 	void which_config(int fd);
 	//get server_id
-	Request & get_server_id(void);
-	void set_server_id(Request & id);
+	Request &get_server_id(void);
+	void set_server_id(Request id);
 	//get config_id
 	Config get_config_id(void);
 	void set_config_id(Config id);
