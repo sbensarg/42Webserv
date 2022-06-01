@@ -122,19 +122,18 @@ int Cluster::read_request(int fd)
   int recb;
   std::string str;
   fcntl(fd, F_SETFL, O_NONBLOCK);
-  memset(buff, 0, 8192);
+  memset(buff, 0, 8193);
   if((recb = recv(fd, buff, 8192, 0)) < 0)
     {
       this->requests.erase(fd);
       close(fd);
       throw("recv: error");
     }
-  str = buff;
+  //str = buff;
   it = this->requests.find(fd);
   if (it != this->requests.end())
     {
-      it->second.append_data(str, recb);
-      std::cout << "ret check all keys " << it->second.check_all_keys() << "\n";
+      it->second.append_data(buff, recb);
       if(it->second.request_read == true || it->second.check_all_keys() == false)
         {
           return (1);

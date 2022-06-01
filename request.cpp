@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-Request::Request(void) : total_size(0), data(""), cnt_size(0), header_length(0), body(""), flag(0)
+Request::Request(void) : total_size(0), data(""), cnt_size(0), header_length(0), body(""), flag(0), check(0)
 {
 	
 }
@@ -11,10 +11,10 @@ Request::~Request()
 
 }
 
-void Request::append_data(std::string data, int size)
+void Request::append_data(char * data, int size)
 { 
-	int check = 0;
 	int f = 0;
+//	std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
 	if (total_size == 0)
 	{
 		this->data.append(data);
@@ -33,20 +33,22 @@ void Request::append_data(std::string data, int size)
 				{
 					std::string wr = this->data.substr(header_length);
 					pipe(pipes);
-					write(pipes[1], wr.c_str(), wr.length());
-					check = 1;
-					std::cout << wr << "\n";
+					write(pipes[1], data + header_length, wr.length());
+					this->check = 1;
+					//std::cout << data + header_length;
 				}
 			}
 		}
-		else if (total_size < cnt_size + header_length && check == 1)
-		{
-			std::cout << data << "\n";
-			write(pipes[1], data.c_str(), size);
-			total_size += size;
-		}
-		if (total_size == cnt_size + header_length && total_size > 0)
-			request_read = true;
+	}
+	else if (total_size < cnt_size + header_length && this->check == 1)
+	{
+		//std::cout << data;
+		write(pipes[1], data, size);
+		total_size += size;
+	}
+	if (total_size == cnt_size + header_length && total_size > 0)
+	{
+		request_read = true;
 	}
 }
 		

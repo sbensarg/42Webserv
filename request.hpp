@@ -22,11 +22,12 @@ public:
 	int fd;
 	int pipes[2];
 	bool request_read;
+	int check;
 public:
 	Request(void);
 	Request(std::string &data, int size);
 	~Request();
-	void append_data(std::string data, int size);
+	void append_data(char * data, int size);
 	int check_recv_all_data(void);
 	void parse_request(void);
 	//check methods
