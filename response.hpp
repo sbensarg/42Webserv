@@ -29,7 +29,8 @@ public:
 	std::string get_location_header(void);
 	void set_location_header(std::string l);
 	//find which server the request should be routed to
-	void which_config(int fd);
+	int which_config(int fd);
+	std::string find_host_of_fd_socket(int fd);
 	//get server_id
 	Request &get_server_id(void);
 	void set_server_id(Request & id);

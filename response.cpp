@@ -196,13 +196,26 @@ int Response::check_autoindex(bool autoindex)
 	return (0);
 }
 
-void Response::which_config(int fd)
+std::string Response::find_host_of_fd_socket(int fd)
+{	
+	std::map<int, int>::iterator serv;
+	for(std::vector<Server>::iterator it = Cluster::getInstance().servers.begin(); it != Cluster::getInstance().servers.end(); it++)
+    {
+		serv = Cluster::getInstance().server_client.find(it->getFd());
+		if (serv != Cluster::getInstance().server_client.end())
+		{
+			if (serv->second == fd)
+				return (it->listen.host);
+		}
+	}
+	return (NULL);
+}
+int Response::which_config(int fd)
 {
 	std::map<int, Request>::iterator it;
 	it = Cluster::getInstance().requests.find(fd);
 	if (it != Cluster::getInstance().requests.end())
 	{
-		
 		for(std::vector<Config>::iterator it2 = Cluster::getInstance().configs.begin(); it2 != Cluster::getInstance().configs.end(); it2++)
 		{
 			if (it->second.host == "localhost")
@@ -211,17 +224,22 @@ void Response::which_config(int fd)
 			{
 				this->set_config_id(*it2);
 				this->set_server_id(it->second);
-				break;
+				return (0);
 			}
 			else if (it->second.host == it2->get_servername() && it->second.port == it2->get_listen().port)
 			{
-				this->set_config_id(*it2);
-				this->set_server_id(it->second);
-				break;
+				std::string host;
+				host = this->find_host_of_fd_socket(fd);
+				if (host != "" && host == it2->get_listen().host)
+				{
+					this->set_config_id(*it2);
+					this->set_server_id(it->second);
+					return (0);
+				}	
 			}
-
 		}
 	}
+	return (1);
 }
 
 Request &Response::get_server_id(void)
@@ -420,8 +438,9 @@ void Response::get_string_from_path(std::string path)
 
 int Response::make_response(int client_socket, Request req)
 {
-	this->which_config(client_socket);
-	if (req.check_all_keys() == false)
+	int ret;
+	ret = this->which_config(client_socket);
+	if (req.check_all_keys() == false || ret == 1)
 		this->find_error_page(400, this->get_config_id().get_error_pages());
 	else
 		this->find_Path();

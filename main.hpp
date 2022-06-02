@@ -22,6 +22,8 @@
 #include <arpa/inet.h>
 #include<sys/stat.h>
 #include <dirent.h>
+#include <unistd.h>  // for TEMP_FAILURE_RETRY
+
 
 
 #define RED     "\x1b[31m"

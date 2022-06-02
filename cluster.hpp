@@ -28,6 +28,7 @@ class Cluster {
 		std::map<int, fd_set> read;
 		std::map<int, fd_set> write;
 		std::map<int, Request> requests;
+		std::map<int, int> server_client;
 		int setsize;
 };
 

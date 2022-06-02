@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-Request::Request(void) : total_size(0), data(""), cnt_size(0), header_length(0), body(""), flag(0), check(0)
+Request::Request(void) : total_size(0), data(""), cnt_size(0), header_length(0), body(""), flag(0), check(0), host(""), port(0)
 {
 	
 }
@@ -14,7 +14,7 @@ Request::~Request()
 void Request::append_data(char * data, int size)
 { 
 	int f = 0;
-//	std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
+	std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
 	if (total_size == 0)
 	{
 		this->data.append(data);
@@ -37,16 +37,21 @@ void Request::append_data(char * data, int size)
 					this->check = 1;
 					//std::cout << data + header_length;
 				}
+				else
+				{
+					cnt_size = 0;
+					total_size = 0;
+					header_length = 0;
+				}
 			}
 		}
 	}
 	else if (total_size < cnt_size + header_length && this->check == 1)
 	{
-		//std::cout << data;
 		write(pipes[1], data, size);
 		total_size += size;
 	}
-	if (total_size == cnt_size + header_length && total_size > 0)
+	if (total_size == cnt_size + header_length)
 	{
 		request_read = true;
 	}
@@ -189,6 +194,8 @@ void Request::get_port()
 			this->host = value.substr(0, i);
 			std::string s(value, i + 1);
 			this->port = std::atoi(s.c_str());
+			if (this->host == "" || this->port == 0)
+				this->flag = 1;
 		}
 		else
 		{
@@ -198,7 +205,8 @@ void Request::get_port()
 	}
 	else
 		this->flag = 1;
-
+		
+	std::cout << "port " << this->port << " host [" << this->host << "]\n";
 }
 
 std::string Request::getRetCntType(void)

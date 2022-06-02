@@ -123,7 +123,7 @@ int Cluster::read_request(int fd)
   std::string str;
   fcntl(fd, F_SETFL, O_NONBLOCK);
   memset(buff, 0, 8193);
-  if((recb = recv(fd, buff, 8192, 0)) < 0)
+  if((recb = recv(fd, buff , 8192, 0)) < 0)
     {
       this->requests.erase(fd);
       close(fd);
@@ -188,7 +188,9 @@ void Cluster::run(void)
                       std::cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
                       int client = accept_connection(socket_fd);
                       FD_SET(client, &this->read[socket_fd]);
-
+					  std::cout <<"socket_fd " << socket_fd << "\n"; 
+					  std::cout <<"client " << client << "\n"; 
+					  this->server_client.insert(std::pair<int, int>(socket_fd, client));
                       this->requests.insert(std::pair<int, Request>(client, Request()));
                     }
                   else
@@ -205,6 +207,7 @@ void Cluster::run(void)
                 {
                   if (this->handle_connection(i) == 1)
                     {
+					  this->server_client.erase(socket_fd);
                       FD_CLR(i, &this->write[socket_fd]);
                       FD_CLR(i, &tmp_write);
 
