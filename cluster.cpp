@@ -1,5 +1,7 @@
 #include "cluster.hpp"
 
+#define BUFF_SIZE 65536
+
 Cluster::Cluster(void)
 {
 
@@ -118,23 +120,23 @@ int Cluster::read_request(int fd)
 {
   std::map<int, Request>::iterator it;
 
-  char buff[8192];
+  char buff[BUFF_SIZE] = {0};
   int recb;
   std::string str;
   fcntl(fd, F_SETFL, O_NONBLOCK);
-  memset(buff, 0, 8193);
-  if((recb = recv(fd, buff , 8192, 0)) < 0)
+  if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) < 0)
     {
       this->requests.erase(fd);
       close(fd);
       throw("recv: error");
     }
+  std::cout << "recv read  >>>>>>>> " << recb << "\n";
   //str = buff;
   it = this->requests.find(fd);
   if (it != this->requests.end())
     {
-      it->second.append_data(buff, recb);
-	 
+      it->second.append_data(fd, buff, recb);
+
       if(it->second.request_read == true || it->second.check_all_keys() == false)
         {
           return (1);
@@ -145,7 +147,6 @@ int Cluster::read_request(int fd)
 
 int	Cluster::handle_connection(int client_socket)
 {
-  int size_request = 0;
   std::map<int, Request>::iterator it;
   Response response;
   it = this->requests.find(client_socket);

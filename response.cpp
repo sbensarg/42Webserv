@@ -56,6 +56,7 @@ void Response::find_location_error(std::string location)
 	{
 		std::string last_path = i->first;
 		std::string first_path = i->second.root;
+		std::cout << "Location >> " << location << " last_path >> " << last_path << "\n";
 		if (location == last_path)
 		{
 			location_full_path = first_path + location;
@@ -86,11 +87,11 @@ void Response::find_error_page(int sc, std::map<int, std::string> err_pages)
 		if (it->first == sc)
 		{
 			this->find_location_error(it->second);
+			std::cout << "status code " << this->get_status_code() << "\n";
 			return ;
 		}
 		it++;
 	}
-
 	set_default_error_page(this->get_status_code());
 }
 
@@ -222,6 +223,7 @@ int Response::which_config(int fd)
 {
 	std::map<int, Request>::iterator it;
 	it = Cluster::getInstance().requests.find(fd);
+	std::vector<Config>::iterator tmp = Cluster::getInstance().configs.end();
 	if (it != Cluster::getInstance().requests.end())
 	{
 		for(std::vector<Config>::iterator it2 = Cluster::getInstance().configs.begin(); it2 != Cluster::getInstance().configs.end(); it2++)
@@ -245,7 +247,14 @@ int Response::which_config(int fd)
 					return (0);
 				}	
 			}
+			else if (it->second.port == it2->get_listen().port && tmp == Cluster::getInstance().configs.end())
+			{
+				tmp = it2;
+			}
 		}
+		this->set_config_id(*tmp);
+		this->set_server_id(it->second);
+		return (0);
 	}
 	return (1);
 }
@@ -419,37 +428,48 @@ void Response::get_string_from_path(std::string path)
 		std::stringstream tmp;
 		std::string hea;
 		bool t = 0;
-		cgi c(this->get_server_id(), routes[ext], path);
-		grab_content.open(c.get_output());
-		tmp << grab_content.rdbuf();
-		while (std::getline(tmp, hea))
-		{
-			hea += "\n";
-			if (t == 1)
-				make_content << hea;
-			else if (t == 0)
+		try {
+			cgi c(this->get_server_id(), routes[ext], path);
+			grab_content.open(c.get_output());
+
+			tmp << grab_content.rdbuf();
+			while (std::getline(tmp, hea))
 			{
-				size_t pos = hea.find(":");
-				if (pos != std::string::npos)
+				hea += "\n";
+				if (t == 1)
+					make_content << hea;
+				else if (t == 0)
 				{
-					std::string name = hea.substr(0, pos);
-					std::string value = hea.substr(pos + 2, hea.length() - (name.length() + 3));
-					this->response_headers.insert(std::pair<std::string, std::string>(name, value));
+					size_t pos = hea.find(":");
+					if (pos != std::string::npos)
+					{
+						std::string name = hea.substr(0, pos);
+						std::string value = hea.substr(pos + 2, hea.length() - (name.length() + 3));
+						this->response_headers.insert(std::pair<std::string, std::string>(name, value));
+					}
 				}
+				if (hea == "\r\n")
+					t = 1;
 			}
-			if (hea == "\r\n")
-				t = 1;
+			std::string finished_content;
+			finished_content = make_content.str();
+			this->set_response_string(finished_content);
+
+		} catch (int sc) {
+			std::cout << "error php\n";
+			this->find_error_page(sc, conf.get_error_pages());
 		}
 	}
 	else {
 		
 		grab_content.open(path);
 		make_content << grab_content.rdbuf();
+		std::string finished_content;
+		finished_content = make_content.str();
+		this->set_response_string(finished_content);
+
 	}
 
-	std::string finished_content;
-	finished_content = make_content.str();
-	this->set_response_string(finished_content);
 }
 
 int Response::make_response(int client_socket, Request req)

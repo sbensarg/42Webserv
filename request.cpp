@@ -1,8 +1,10 @@
 #include "request.hpp"
 
-Request::Request(void) : total_size(0), data(""), cnt_size(0), header_length(0), body(""), flag(0), check(0), host(""), port(0)
+Request::Request(void) :  data(""), body(""), flag(0), check(0), host(""), port(0)
 {
-	
+	this->header_length = 0;
+	this->cnt_size = 0;
+	this->total_size = 0;
 }
 
 
@@ -11,7 +13,7 @@ Request::~Request()
 
 }
 
-void Request::append_data(char * data, int size)
+void Request::append_data(int fd, char * data, int size)
 { 
 	int f = 0;
 	std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
@@ -32,8 +34,13 @@ void Request::append_data(char * data, int size)
 				if (this->getmethod() == "POST")
 				{
 					std::string wr = this->data.substr(header_length);
-					pipe(pipes);
-					write(pipes[1], data + header_length, wr.length());
+					std::stringstream s;
+					s << fd;
+					std::string tmp;
+					s >> tmp;
+					this->bodyfilename = "/tmp/WEBSERV_" + tmp + ".body";
+					this->bodyfd = ::open(this->bodyfilename.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
+					write(this->bodyfd, data + header_length, this->total_size - header_length);
 					this->check = 1;
 					//std::cout << data + header_length;
 				}
@@ -48,7 +55,7 @@ void Request::append_data(char * data, int size)
 	}
 	else if (total_size < cnt_size + header_length && this->check == 1)
 	{
-		write(pipes[1], data, size);
+		write(this->bodyfd, data, size);
 		total_size += size;
 	}
 	if (total_size == cnt_size + header_length)

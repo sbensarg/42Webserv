@@ -24,9 +24,9 @@ int cgi::checkcgi(std::string path)
         {
           // it's a file
           if(!(s.st_mode & S_IXUSR))
-            return (1);
-          else
             return (0);
+          else
+            return (1);
         }
     }
   //error
@@ -56,7 +56,8 @@ void cgi::SetCgiEnv()
     }
   else if (this->reqs->method == "POST")
     {
-      this->fd_input = this->reqs->pipes[0];
+      std::cout << "input filename >>>> " << this->reqs->bodyfilename << "\n";
+      this->fd_input = ::open(this->reqs->bodyfilename.c_str(), O_RDONLY, 0666);
       setenv("QUERY_STRING", "", 1);
       setenv("CONTENT_LENGTH", this->reqs->map["Content-Length"].c_str(), 1);
     }
@@ -65,7 +66,7 @@ void cgi::SetCgiEnv()
 void cgi::SetUpArgs_fds()
 {
   this->args[2] = NULL;
-  if (checkcgi(this->config->cgi_path) == 0)
+  if (checkcgi(this->config->cgi_path) == 1)
       this->args[0] = (char *)this->config->cgi_path.c_str();
   else
     throw 500;
@@ -82,14 +83,13 @@ void cgi::ExecuteCgi()
       this->SetCgiEnv();
       dup2(this->fd_input, 0);
       dup2(this->fd_output, 1);
-      dup2(this->fd_output, 2);
       execve(this->args[0], (char **)this->args, (char **)environ);
       exit(1);
     }
   else
     {
       waitpid(pid, NULL, 0);
-      //close(this->fd_input);
+      close(this->fd_input);
       close(this->fd_output);
     }
 
