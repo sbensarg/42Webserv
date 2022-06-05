@@ -113,8 +113,9 @@ void Request::parse_request()
 			this->map.insert(std::pair<std::string, std::string>(name, value));
 		}
 	}
-	get_port();
-	this->ret_cnt_Type();
+	this->get_port();
+	this->geturi();
+	this->ret_cnt_Type(geturi());
 	this->check_method();
 }
 
@@ -131,13 +132,14 @@ bool Request::check_http_vesion()
 
 bool Request::check_method()
 {
-	std::string methods[7] = {"POST", "GET", "DELETE", "PUT", "COPY", "OPTIONS", "PATCH"};
+	std::string methods[8] = {"POST", "GET", "DELETE", "PUT", "COPY", "OPTIONS", 
+	"PATCH", "HEAD"};
 	it = this->map.find("method");
 	if (it != this->map.end())
 	{
 		if (it->second != "")
 		{
-			for (int i = 0; i < 7; i++)
+			for (int i = 0; i < 8; i++)
 			{
 				if (methods[i] == it->second)
 				{
@@ -151,15 +153,15 @@ bool Request::check_method()
 	return (false);
 }
 
-void Request::ret_cnt_Type()
+void Request::ret_cnt_Type(std::string uri)
 {
 	std::string extention;
 	std::ifstream infile("mime.txt");
 	std::string line;
 	std::string name, value, val = "";
 	size_t i, pos;
-	value = this->geturi();
-	i = value.find(".");
+	value = uri;
+	i = value.find_last_of(".");
 	if (i != std::string::npos)
 		extention = value.substr(i + 1);
 	if (infile.is_open())
@@ -249,7 +251,7 @@ void Request::affichage_request()
 	{
 		std::cout << "["<<  it->first << "] => [" << it->second << "]\n";
 	}
-	this->ret_cnt_Type();
+	//this->ret_cnt_Type();
 	std::cout << "returned content type [" << this->ret_cnt_type << "]\n";
 
 	if (this->check_method() == true)

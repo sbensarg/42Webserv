@@ -33,7 +33,7 @@ public:
 	//check methods
 	bool check_http_vesion(void);
 	bool check_method(void);
-	void ret_cnt_Type(void);
+	void ret_cnt_Type(std::string uri);
 
 	//getters
 	std::string getRetCntType(void);

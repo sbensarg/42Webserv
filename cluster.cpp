@@ -137,7 +137,6 @@ int Cluster::read_request(int fd)
 	 
       if(it->second.request_read == true || it->second.check_all_keys() == false)
         {
-			
           return (1);
         }
     }

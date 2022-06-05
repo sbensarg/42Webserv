@@ -39,6 +39,7 @@ void Response::set_default_error_page(int sc)
 	html << " :-(</h1>";
 	html << "<p>this is the default error page!!!</p>";
 	// Transfer it to a std::string to send
+	this->get_server_id().ret_cnt_type = "text/html";
 	this->set_response_string(html.str());
 
 }
@@ -65,7 +66,10 @@ void Response::find_location_error(std::string location)
 			else if (check == "NOTFOUND")
 				this->set_default_error_page(404);
 			else
+			{	
+				this->get_server_id().ret_cnt_Type(check);
 				this->get_string_from_path(check);
+			}
 			return ;
 		}			
 		i++;
@@ -86,6 +90,7 @@ void Response::find_error_page(int sc, std::map<int, std::string> err_pages)
 		}
 		it++;
 	}
+
 	set_default_error_page(this->get_status_code());
 }
 
@@ -138,6 +143,8 @@ int Response::display_index(std::vector<std::string> list)
 		ret = this->checkLocation(full_path_with_index);
 		if (ret == full_path_with_index)
 		{
+			std::cout << full_path_with_index << "dkhal hnaya \n";
+			this->get_server_id().ret_cnt_Type(full_path_with_index);
 			this->get_string_from_path(full_path_with_index);
 			return (1);
 		}
@@ -181,6 +188,7 @@ int Response::check_autoindex(bool autoindex)
         			this->get_server_id().port << uri +  file + "\">" +  file + "</a></p>\n";
 			}
 			closedir (dir);
+			this->get_server_id().ret_cnt_type = "text/html";
 			this->set_response_string(html.str());
 
 		}
@@ -316,6 +324,7 @@ void Response::find_Path(void)
 				this->redirection(i->second.redirect_status_code, i->second.redirect_url);
 			else
 			{
+			
 				flag = this->check_allowed_method(i->second.allowed_methods, id.getmethod());
 				if (flag == 1)
 				{
@@ -353,7 +362,9 @@ void Response::find_Path(void)
 						//this->setFullPathLocation(check);
 				}
 				else
+				{
 					this->find_error_page(405, conf.get_error_pages());
+				}
 			}
 			break;
 		}
@@ -426,13 +437,13 @@ void Response::get_string_from_path(std::string path)
 		}
 	}
 	else {
+		
 		grab_content.open(path);
 		make_content << grab_content.rdbuf();
 	}
 
 	std::string finished_content;
 	finished_content = make_content.str();
-
 	this->set_response_string(finished_content);
 }
 
@@ -458,14 +469,16 @@ int Response::make_response(int client_socket, Request req)
 	if (this->response_headers.find("Content-type") != this->response_headers.end())
 		make_response << "Content-Type: " << this->response_headers["Content-type"] << "\r\n";
 	else
-		make_response << "Content-Type: " << req.getRetCntType() << "\r\n";
+		make_response << "Content-Type: " <<  this->get_server_id().getRetCntType() << "\r\n";
 	make_response << "Content-Length: " << finished_content.length() << "\r\n";
 	if (this->get_location_header() != "")
 		make_response << "Location: " << this->get_location_header() << "\r\n";
 	make_response << "\r\n";
-	make_response << finished_content;
+	if (this->get_server_id().getmethod() != "HEAD")
+		make_response << finished_content;
 	// Transfer it to a std::string to send
 	std::string finished_response = make_response.str();
+	//std::cout << "finished_response "  <<finished_response << "\n";
 	// Send the HTTP Response
 	
 	int send_left;
