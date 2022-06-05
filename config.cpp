@@ -55,10 +55,14 @@ Config::Config(std::string &b)
           //TODO: check if path valid
         }
       else if (line.rfind("location:", 0) == 0)
+      {
           this->routes.insert(this->get_route(line, block));
+      }
       else
         throw ("Config File: Syntax error");
     }
+  if (this->routes.find("/") == this->routes.end())
+    throw ("Config File: location: / missing");
 
 }
 
