@@ -349,6 +349,11 @@ void Response::find_Path(void)
 					check = this->checkLocation(this->getFullPathLocation());
 					if (check == "DIR")
 					{
+						if (id.getmethod() == "DELETE")
+						{
+							this->find_error_page(403, conf.get_error_pages());
+							return ;
+						}
 						if (i->second.index.size() != 0)
 						{
 							ret_index = this->display_index(i->second.index);
@@ -371,7 +376,16 @@ void Response::find_Path(void)
 					else if (check == "NOTFOUND")
 						this->find_error_page(404, conf.get_error_pages());
 					else
-						this->get_string_from_path(check);
+					{
+						if (id.getmethod() == "DELETE")
+						{
+							remove (check.c_str());
+							this->set_status_code(204);
+							return ;
+						}
+						else
+							this->get_string_from_path(check);
+					}
 				
 						//this->setFullPathLocation(check);
 				}
