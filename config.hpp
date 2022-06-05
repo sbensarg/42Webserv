@@ -45,6 +45,8 @@ public:
   std::string &get_servername(void);
   std::map<std::string, s_route> &get_routes(void);
   std::map<int, std::string> & get_error_pages(void);
+   unsigned long long & get_body_size(void);
+
 private:
   std::pair<std::string, s_route> get_route(std::string &b, std::istringstream &block);
 private:
@@ -52,7 +54,7 @@ private:
   s_listen listen;
   std::string server_name;
   std::map<int, std::string> error_pages;
-  unsigned int body_size;
+  unsigned long long body_size;
   std::map<std::string, s_route> routes;
 
 };

@@ -235,7 +235,7 @@ int Response::which_config(int fd)
 				return (0);
 			}
 			else if (it->second.host == it2->get_servername() && it->second.port == it2->get_listen().port)
-			{
+			{	
 				std::string host;
 				host = this->find_host_of_fd_socket(fd);
 				if (host != "" && host == it2->get_listen().host)
@@ -311,6 +311,11 @@ void Response::find_Path(void)
 	Request id = this->get_server_id();
 	Config conf = this->get_config_id();
 
+	if (id.cnt_size > conf.get_body_size())
+	{
+		this->find_error_page(413, conf.get_error_pages());
+		return;
+	}
 	uri = id.geturi();
 	std::map<std::string, s_route>::iterator i = conf.get_routes().begin();
 	int j = conf.get_routes().size() - 1;

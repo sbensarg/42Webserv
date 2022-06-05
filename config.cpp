@@ -98,6 +98,12 @@ std::map<int, std::string> & Config::get_error_pages(void)
 {
 	return (this->error_pages);
 }
+
+unsigned long long & Config::get_body_size(void)
+{
+	return (this->body_size);
+}
+
 std::pair<std::string, s_route> Config::get_route(std::string &b, std::istringstream &block)
 {
   std::pair<std::string, s_route> ret;

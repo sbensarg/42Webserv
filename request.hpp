@@ -3,7 +3,6 @@
 
 #include "main.hpp"
 
-
 class Request
 {
 public:
