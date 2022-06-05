@@ -56,7 +56,8 @@ void cgi::SetCgiEnv()
     }
   else if (this->reqs->method == "POST")
     {
-      this->fd_input = this->reqs->pipes[0];
+      std::cout << "input filename >>>> " << this->reqs->bodyfilename << "\n";
+      this->fd_input = ::open(this->reqs->bodyfilename.c_str(), O_RDONLY, 0666);
       setenv("QUERY_STRING", "", 1);
       setenv("CONTENT_LENGTH", this->reqs->map["Content-Length"].c_str(), 1);
     }
@@ -82,7 +83,6 @@ void cgi::ExecuteCgi()
       this->SetCgiEnv();
       dup2(this->fd_input, 0);
       dup2(this->fd_output, 1);
-      dup2(this->fd_output, 2);
       execve(this->args[0], (char **)this->args, (char **)environ);
       exit(1);
     }
