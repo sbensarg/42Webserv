@@ -56,6 +56,8 @@ Config::Config(std::string &b)
         }
       else if (line.rfind("location:", 0) == 0)
           this->routes.insert(this->get_route(line, block));
+      else if (line.rfind("max_body_size=", 0) == 0)
+        std::istringstream(line.substr(14, line.find(";") - 14)) >> this->body_size;
       else
         throw ("Config File: Syntax error");
     }
