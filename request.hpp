@@ -19,7 +19,6 @@ public:
 	int flag;
 	std::string method;
 	int fd;
-	int pipes[2];
 	std::string bodyfilename;
 	int bodyfd;
 	bool request_read;

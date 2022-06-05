@@ -122,16 +122,12 @@ int Cluster::read_request(int fd)
 
   char buff[BUFF_SIZE] = {0};
   int recb;
-  std::string str;
   fcntl(fd, F_SETFL, O_NONBLOCK);
   if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) < 0)
     {
       this->requests.erase(fd);
       close(fd);
-      throw("recv: error");
     }
-  std::cout << "recv read  >>>>>>>> " << recb << "\n";
-  //str = buff;
   it = this->requests.find(fd);
   if (it != this->requests.end())
     {
@@ -207,10 +203,9 @@ void Cluster::run(void)
                 {
                   if (this->handle_connection(i) == 1)
                     {
-					  this->server_client.erase(socket_fd);
+                      this->server_client.erase(socket_fd);
                       FD_CLR(i, &this->write[socket_fd]);
                       FD_CLR(i, &tmp_write);
-
 
                     }
                 }

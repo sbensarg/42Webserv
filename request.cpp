@@ -15,8 +15,8 @@ Request::~Request()
 
 void Request::append_data(int fd, char * data, int size)
 { 
-	int f = 0;
-	std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
+	size_t f = 0;
+	//std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
 	if (total_size == 0)
 	{
 		this->data.append(data);
@@ -42,7 +42,6 @@ void Request::append_data(int fd, char * data, int size)
 					this->bodyfd = ::open(this->bodyfilename.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0666);
 					write(this->bodyfd, data + header_length, this->total_size - header_length);
 					this->check = 1;
-					//std::cout << data + header_length;
 				}
 				else
 				{
@@ -61,6 +60,8 @@ void Request::append_data(int fd, char * data, int size)
 	if (total_size == cnt_size + header_length)
 	{
 		request_read = true;
+		if (this->check == 1)
+			close(this->bodyfd);
 	}
 }
 		

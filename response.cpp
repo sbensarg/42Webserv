@@ -320,7 +320,7 @@ void Response::find_Path(void)
 	Request id = this->get_server_id();
 	Config conf = this->get_config_id();
 
-	if (id.cnt_size > conf.get_body_size())
+	if (conf.get_body_size() != 0 && id.cnt_size > conf.get_body_size())
 	{
 		this->find_error_page(413, conf.get_error_pages());
 		return;
@@ -456,7 +456,6 @@ void Response::get_string_from_path(std::string path)
 			this->set_response_string(finished_content);
 
 		} catch (int sc) {
-			std::cout << "error php\n";
 			this->find_error_page(sc, conf.get_error_pages());
 		}
 	}

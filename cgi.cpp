@@ -89,7 +89,8 @@ void cgi::ExecuteCgi()
   else
     {
       waitpid(pid, NULL, 0);
-      close(this->fd_input);
+      if (this->fd_input > 0)
+        close(this->fd_input);
       close(this->fd_output);
     }
 

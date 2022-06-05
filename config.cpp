@@ -7,7 +7,7 @@ void trim(std::string &line)
 
 Config::Config(void)
 {
-
+  this->body_size = 0;
 }
 
 Config::Config(std::string &b)
