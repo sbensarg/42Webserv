@@ -28,7 +28,6 @@ public:
 	Request(std::string &data, int size);
 	~Request();
 	void append_data(int fd, char * data, int size);
-	int check_recv_all_data(void);
 	void parse_request(void);
 	//check methods
 	bool check_http_vesion(void);

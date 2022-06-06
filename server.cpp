@@ -20,8 +20,7 @@ void Server::setup(void)
   int optval = 1;
   if ((setsockopt(this->server_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) == -1)
     {
-        perror("In set socket options");
-        exit(EXIT_FAILURE);
+		throw ("In set socket options : error");
     }
 
   memset(&address, 0, sizeof(sockaddr_in));

@@ -144,7 +144,6 @@ int Response::display_index(std::vector<std::string> list)
 		ret = this->checkLocation(full_path_with_index);
 		if (ret == full_path_with_index)
 		{
-			std::cout << full_path_with_index << "dkhal hnaya \n";
 			this->get_server_id().ret_cnt_Type(full_path_with_index);
 			this->get_string_from_path(full_path_with_index);
 			return (1);
@@ -196,8 +195,7 @@ int Response::check_autoindex(bool autoindex)
 		else
 		{
 			/* could not open directory */
-			perror ("");
-			return EXIT_FAILURE;
+			this->find_error_page(500, this->get_config_id().get_error_pages());
 		}
 
 		return (1);
@@ -524,16 +522,15 @@ int Response::make_response(int client_socket, Request req)
 	const char *message_ptr = finished_response.c_str();
 	send_left = finished_response.length();
 
-	while (send_left > 0)
+	while (send_left >= 0)
 	{
 		send_rc = send(client_socket, message_ptr, send_left, 0);
-		if (send_rc == -1)
+		if (send_rc == -1 || send_rc == 0)
 			break;
 
 		send_left -= send_rc;
 		message_ptr += send_rc;
 		usleep(200);
 	}
-	
 	return (1);
 }

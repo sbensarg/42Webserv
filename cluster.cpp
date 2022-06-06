@@ -123,7 +123,7 @@ int Cluster::read_request(int fd)
   char buff[BUFF_SIZE] = {0};
   int recb;
   fcntl(fd, F_SETFL, O_NONBLOCK);
-  if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) < 0)
+  if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) <= 0)
     {
       this->requests.erase(fd);
       close(fd);
