@@ -6,7 +6,6 @@
 class Request
 {
 public:
-	std::string body;
 	std::string data;
 	std::string ret_cnt_type;
 	int total_size;
@@ -18,14 +17,12 @@ public:
 	std::map<std::string, std::string>::iterator it;
 	int flag;
 	std::string method;
-	int fd;
 	std::string bodyfilename;
 	int bodyfd;
 	bool request_read;
 	int check;
 public:
 	Request(void);
-	Request(std::string &data, int size);
 	~Request();
 	void append_data(int fd, char * data, int size);
 	void parse_request(void);

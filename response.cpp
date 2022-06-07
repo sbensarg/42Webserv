@@ -1,7 +1,7 @@
 #include "response.hpp"
 #include <errno.h>
 
-Response::Response() : status_code(200), location_header("")
+Response::Response() : status_code(200), location_header(""), localhost("")
 {
 }
 
@@ -39,7 +39,7 @@ void Response::set_default_error_page(int sc)
 	html << " :-(</h1>";
 	html << "<p>this is the default error page!!!</p>";
 	// Transfer it to a std::string to send
-	this->get_server_id().ret_cnt_type = "text/html";
+	//this->get_server_id().ret_cnt_type = "text/html";
 	this->set_response_string(html.str());
 
 }
@@ -184,11 +184,15 @@ int Response::check_autoindex(bool autoindex)
 				else if (pos == 0 && uri[pos + 1] == 0)
 					uri = "";
 				file = "/" + file;
-				html << "\t\t<p><a href=\"http://" + this->get_server_id().host + ":" <<\
+				if (this->localhost != "")
+					html << "\t\t<p><a href=\"http://" + this->localhost + ":" <<\
+        			this->get_server_id().port << uri +  file + "\">" +  file + "</a></p>\n";
+				else
+					html << "\t\t<p><a href=\"http://" + this->get_server_id().host + ":" <<\
         			this->get_server_id().port << uri +  file + "\">" +  file + "</a></p>\n";
 			}
 			closedir (dir);
-			this->get_server_id().ret_cnt_type = "text/html";
+			//this->get_server_id().ret_cnt_type = "text/html";
 			this->set_response_string(html.str());
 
 		}
@@ -217,7 +221,7 @@ std::string Response::find_host_of_fd_socket(int fd)
 	}
 	return (NULL);
 }
-int Response::which_config(int fd)
+void Response::which_config(int fd)
 {
 	std::map<int, Request>::iterator it;
 	it = Cluster::getInstance().requests.find(fd);
@@ -227,12 +231,17 @@ int Response::which_config(int fd)
 		for(std::vector<Config>::iterator it2 = Cluster::getInstance().configs.begin(); it2 != Cluster::getInstance().configs.end(); it2++)
 		{
 			if (it->second.host == "localhost")
+			{
+				this->localhost = it->second.host;
 				it->second.host = "127.0.0.1";
+			}
+				
 			if (it->second.host == it2->get_listen().host && it->second.port == it2->get_listen().port)
 			{
 				this->set_config_id(*it2);
 				this->set_server_id(it->second);
-				return (0);
+				return;
+				//return (0);
 			}
 			else if (it->second.host == it2->get_servername() && it->second.port == it2->get_listen().port)
 			{	
@@ -242,19 +251,27 @@ int Response::which_config(int fd)
 				{
 					this->set_config_id(*it2);
 					this->set_server_id(it->second);
-					return (0);
+					return;
+					//return (0);
 				}	
 			}
+		
 			else if (it->second.port == it2->get_listen().port && tmp == Cluster::getInstance().configs.end())
 			{
+				std::cout << "dkhal hnaya \n";
 				tmp = it2;
 			}
 		}
-		this->set_config_id(*tmp);
-		this->set_server_id(it->second);
-		return (0);
+		if (tmp != Cluster::getInstance().configs.end())
+		{
+			this->set_config_id(*tmp);
+			this->set_server_id(it->second);
+			return;
+		}
+		
+		// return (0);
 	}
-	return (1);
+	//return (1);
 }
 
 Request &Response::get_server_id(void)
@@ -313,12 +330,11 @@ void Response::find_Path(void)
 	std::string uri;
 	std::string check;
 	int flag = 0;
-	int def = 0;
 	int ret_index = 0;
 	Request id = this->get_server_id();
 	Config conf = this->get_config_id();
 
-	if (conf.get_body_size() != 0 && id.cnt_size > conf.get_body_size())
+	if (conf.get_body_size() != 0 && (unsigned long long)id.cnt_size > conf.get_body_size())
 	{
 		this->find_error_page(413, conf.get_error_pages());
 		return;
@@ -336,7 +352,6 @@ void Response::find_Path(void)
 				this->redirection(i->second.redirect_status_code, i->second.redirect_url);
 			else
 			{
-			
 				flag = this->check_allowed_method(i->second.allowed_methods, id.getmethod());
 				if (flag == 1)
 				{
@@ -485,9 +500,10 @@ void Response::get_string_from_path(std::string path)
 
 int Response::make_response(int client_socket, Request req)
 {
-	int ret;
-	ret = this->which_config(client_socket);
-	if (req.check_all_keys() == false || ret == 1)
+	//int ret;
+	//ret = 
+	this->which_config(client_socket);
+	if (req.check_all_keys() == false)
 		this->find_error_page(400, this->get_config_id().get_error_pages());
 	else
 		this->find_Path();
@@ -522,10 +538,10 @@ int Response::make_response(int client_socket, Request req)
 	const char *message_ptr = finished_response.c_str();
 	send_left = finished_response.length();
 
-	while (send_left >= 0)
+	while (send_left > 0)
 	{
 		send_rc = send(client_socket, message_ptr, send_left, 0);
-		if (send_rc == -1 || send_rc == 0)
+		if (send_rc == -1)
 			break;
 
 		send_left -= send_rc;

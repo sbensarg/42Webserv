@@ -1,10 +1,16 @@
 #include "request.hpp"
 
-Request::Request(void) :  data(""), body(""), flag(0), check(0), host(""), port(0)
+Request::Request(void)
 {
+	this->data = "";
 	this->header_length = 0;
 	this->cnt_size = 0;
 	this->total_size = 0;
+	this->flag = 0;
+	this->check = 0;
+	this->port = 80;
+	this->host = "";
+	this->ret_cnt_type = "text/html";
 }
 
 
@@ -208,10 +214,7 @@ void Request::get_port()
 				this->flag = 1;
 		}
 		else
-		{
-			this->port = 80;
 			this->host = value;
-		}
 	}
 	else
 		this->flag = 1;

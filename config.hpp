@@ -50,7 +50,6 @@ public:
 private:
   std::pair<std::string, s_route> get_route(std::string &b, std::istringstream &block);
 private:
-  Server *serv;
   s_listen listen;
   std::string server_name;
   std::map<int, std::string> error_pages;

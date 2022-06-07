@@ -124,10 +124,7 @@ int Cluster::read_request(int fd)
   int recb;
   fcntl(fd, F_SETFL, O_NONBLOCK);
   if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) <= 0)
-    {
-      this->requests.erase(fd);
-      close(fd);
-    }
+		return(0);
   it = this->requests.find(fd);
   if (it != this->requests.end())
     {
@@ -197,6 +194,13 @@ void Cluster::run(void)
                           FD_CLR(i, &tmp_read);
                           FD_SET(i, &this->write[socket_fd]);
                         }
+						else
+						{
+							this->requests.erase(i);
+     	 					close(i);
+							FD_CLR(i, &this->read[socket_fd]);
+                          	FD_CLR(i, &tmp_read);
+						}
                     }
                 }
               if (FD_ISSET(i, &tmp_write))
