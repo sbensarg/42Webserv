@@ -48,20 +48,26 @@ void cgi::SetCgiEnv()
     setenv("CONTENT_TYPE", this->reqs->getRetCntType().c_str(), 1);
   if (this->reqs->map.find("Cookie") != this->reqs->map.end())
     setenv("HTTP_COOKIE", this->reqs->map["Cookie"].c_str(), 1);
+  if (this->reqs->map.find("User-Agent") != this->reqs->map.end())
+    setenv("HTTP_USER_AGENT", this->reqs->map["User-Agent"].c_str(), 1);
+  if (this->reqs->map.find("Host") != this->reqs->map.end())
+    setenv("HTTP_HOST", this->reqs->map["Host"].c_str(), 1);
+  if (this->reqs->map.find("Accept-Encoding") != this->reqs->map.end())
+    setenv("HTTP_ACCEPT_ENCODING", this->reqs->map["Accept-Encoding"].c_str(), 1);
+  if (this->reqs->map.find("Accept-Language") != this->reqs->map.end())
+    setenv("HTTP_ACCEPT_LANGUAGE", this->reqs->map["Accept-Language"].c_str(), 1);
   if (this->reqs->method == "GET")
-    {
-      //std::cout << "get is in ==> " << "QUERY_STRING" << "\n\n\n";
-      setenv("QUERY_STRING", this->reqs->map["GET_params"].c_str(), 1);
-      setenv("CONTENT_LENGTH", "", 1);
-    }
+  {
+    setenv("QUERY_STRING", this->reqs->map["GET_params"].c_str(), 1);
+    setenv("CONTENT_LENGTH", "", 1);
+  }
   else if (this->reqs->method == "POST")
-    {
-      std::cout << "input filename >>>> " << this->reqs->bodyfilename << "\n";
-      this->fd_input = ::open(this->reqs->bodyfilename.c_str(), O_RDONLY, 0666);
-      setenv("QUERY_STRING", "", 1);
-      setenv("CONTENT_LENGTH", this->reqs->map["Content-Length"].c_str(), 1);
-    }
- }
+  {
+    this->fd_input = ::open(this->reqs->bodyfilename.c_str(), O_RDONLY, 0666);
+    setenv("QUERY_STRING", "", 1);
+    setenv("CONTENT_LENGTH", this->reqs->map["Content-Length"].c_str(), 1);
+  }
+}
 
 void cgi::SetUpArgs_fds()
 {

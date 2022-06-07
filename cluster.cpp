@@ -125,6 +125,7 @@ int Cluster::read_request(int fd)
   fcntl(fd, F_SETFL, O_NONBLOCK);
   if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) <= 0)
 		return(0);
+  std::cout << buff << "\n";
   it = this->requests.find(fd);
   if (it != this->requests.end())
     {
