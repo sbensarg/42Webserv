@@ -357,31 +357,38 @@ void Response::find_Path(void)
 				{
 					last_path = ret_new_location(last_path, 1);
 					location_full_path = first_path + last_path + id.geturi();
-					std::cout << "location_full_path " << location_full_path << "\n"; 
 					this->setFullPathLocation(location_full_path);
 					check = this->checkLocation(this->getFullPathLocation());
 					if (check == "DIR")
 					{
-						if (id.getmethod() == "DELETE")
+						if (this->getFullPathLocation().back() != '/')
 						{
-							this->find_error_page(403, conf.get_error_pages());
-							return ;
+							set_status_code(301);
+							set_location_header(id.geturi() + "/");
 						}
-						if (i->second.index.size() != 0)
+						else
 						{
-							ret_index = this->display_index(i->second.index);
-							if (ret_index == 0)
+							if (id.getmethod() == "DELETE")
+							{
+								this->find_error_page(403, conf.get_error_pages());
+								return ;
+							}
+							if (i->second.index.size() != 0)
+							{
+								ret_index = this->display_index(i->second.index);
+								if (ret_index == 0)
+								{
+									if (this->check_autoindex(i->second.autoindex) == 0)
+										this->find_error_page(404, conf.get_error_pages());
+								}
+								else if (ret_index == 2)
+									this->find_error_page(403, conf.get_error_pages());
+							}
+							else
 							{
 								if (this->check_autoindex(i->second.autoindex) == 0)
 									this->find_error_page(404, conf.get_error_pages());
 							}
-							else if (ret_index == 2)
-								this->find_error_page(403, conf.get_error_pages());
-						}
-						else
-						{
-							if (this->check_autoindex(i->second.autoindex) == 0)
-								this->find_error_page(404, conf.get_error_pages());
 						}
 					}
 					else if (check == "NOPERMISSIONS")
