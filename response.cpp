@@ -39,7 +39,7 @@ void Response::set_default_error_page(int sc)
 	html << " :-(</h1>";
 	html << "<p>this is the default error page!!!</p>";
 	// Transfer it to a std::string to send
-	//this->get_server_id().ret_cnt_type = "text/html";
+	this->get_server_id().ret_cnt_type = "text/html";
 	this->set_response_string(html.str());
 
 }
@@ -192,7 +192,7 @@ int Response::check_autoindex(bool autoindex)
         			this->get_server_id().port << uri +  file + "\">" +  file + "</a></p>\n";
 			}
 			closedir (dir);
-			//this->get_server_id().ret_cnt_type = "text/html";
+			this->get_server_id().ret_cnt_type = "text/html";
 			this->set_response_string(html.str());
 
 		}
@@ -548,7 +548,7 @@ int Response::make_response(int client_socket, Request req)
 	while (send_left > 0)
 	{
 		send_rc = send(client_socket, message_ptr, send_left, 0);
-		if (send_rc == -1)
+		if (send_rc <= 0)
 			break;
 
 		send_left -= send_rc;

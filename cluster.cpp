@@ -118,24 +118,24 @@ int accept_connection(int server_socket)
 
 int Cluster::read_request(int fd)
 {
-  std::map<int, Request>::iterator it;
+	std::map<int, Request>::iterator it;
 
-  char buff[BUFF_SIZE] = {0};
-  int recb;
-  fcntl(fd, F_SETFL, O_NONBLOCK);
-  if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) <= 0)
-		return(0);
-  std::cout << buff << "\n";
-  it = this->requests.find(fd);
-  if (it != this->requests.end())
-    {
-      it->second.append_data(fd, buff, recb);
-
-      if(it->second.request_read == true || it->second.check_all_keys() == false)
-        {
-          return (1);
-        }
-    }
+	char buff[BUFF_SIZE] = {0};
+	int recb;
+	
+	it = this->requests.find(fd);
+	if (it != this->requests.end())
+	{
+		fcntl(fd, F_SETFL, O_NONBLOCK);
+		if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) <= 0)
+			return(0);
+		std::cout << buff << "\n";
+		it->second.append_data(fd, buff, recb);
+		if(it->second.request_read == true || it->second.check_all_keys() == false)
+		{
+			return (1);
+		}
+	}
   return (0);
 }
 
