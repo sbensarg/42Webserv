@@ -183,13 +183,7 @@ int Response::check_autoindex(bool autoindex)
 				}
 				else if (pos == 0 && uri[pos + 1] == 0)
 					uri = "";
-				file = "/" + file;
-				if (this->localhost != "")
-					html << "\t\t<p><a href=\"http://" + this->localhost + ":" <<\
-        			this->get_server_id().port << uri +  file + "\">" +  file + "</a></p>\n";
-				else
-					html << "\t\t<p><a href=\"http://" + this->get_server_id().host + ":" <<\
-        			this->get_server_id().port << uri +  file + "\">" +  file + "</a></p>\n";
+				html << "\t\t<p><a href=\"" + file + "\">" +  file + "</a></p>\n";
 			}
 			closedir (dir);
 			this->get_server_id().ret_cnt_type = "text/html";
@@ -357,6 +351,7 @@ void Response::find_Path(void)
 				{
 					last_path = ret_new_location(last_path, 1);
 					location_full_path = first_path + last_path + id.geturi();
+					std::cout << "location_full_path " << location_full_path << "\n";;
 					this->setFullPathLocation(location_full_path);
 					check = this->checkLocation(this->getFullPathLocation());
 					if (check == "DIR")
@@ -404,7 +399,10 @@ void Response::find_Path(void)
 							return ;
 						}
 						else
+						{
+							std::cout << "dkhal l string from patth  \n";
 							this->get_string_from_path(check);
+						}
 					}
 				
 						//this->setFullPathLocation(check);
@@ -457,6 +455,7 @@ void Response::get_string_from_path(std::string path)
 	size_t n = path.find_last_of(".");
 	std::string ext = path.substr(n);
 	std::map<std::string, s_route> routes = conf.get_routes();
+	
 	if (n != std::string::npos && routes.find(ext) != routes.end())
 	{
 		std::stringstream tmp;
@@ -465,7 +464,6 @@ void Response::get_string_from_path(std::string path)
 		try {
 			cgi c(this->get_server_id(), routes[ext], path);
 			grab_content.open(c.get_output());
-
 			tmp << grab_content.rdbuf();
 			while (std::getline(tmp, hea))
 			{
@@ -490,6 +488,7 @@ void Response::get_string_from_path(std::string path)
 			this->set_response_string(finished_content);
 
 		} catch (int sc) {
+			std::cout << "dkhal l catch\n";
 			this->find_error_page(sc, conf.get_error_pages());
 		}
 	}
@@ -523,15 +522,24 @@ int Response::make_response(int client_socket, Request req)
 	finished_content = this->get_response_string();
 	// Create the HTTP Response
 	std::stringstream make_response;
-	make_response << "HTTP/1.1 " << this->get_status_code() << "\r\n";
+	if (this->response_headers.find("Status") != this->response_headers.end())
+		make_response << "HTTP/1.1 " << this->response_headers["Status"] << "\r\n";
+	else
+		make_response << "HTTP/1.1 " << this->get_status_code() << "\r\n";
 	make_response << "Cache-Control: no-cache, private\r\n";
 	if (this->response_headers.find("Content-type") != this->response_headers.end())
 		make_response << "Content-Type: " << this->response_headers["Content-type"] << "\r\n";
 	else
 		make_response << "Content-Type: " <<  this->get_server_id().getRetCntType() << "\r\n";
 	make_response << "Content-Length: " << finished_content.length() << "\r\n";
+	if (this->response_headers.find("Set-Cookie") != this->response_headers.end())
+		make_response << "Set-Cookie: " << this->response_headers["Set-Cookie"] << "\r\n";
+	if (this->response_headers.find("Expires") != this->response_headers.end())
+		make_response << "Expires: " << this->response_headers["Expires"] << "\r\n";
 	if (this->get_location_header() != "")
 		make_response << "Location: " << this->get_location_header() << "\r\n";
+	else if (this->response_headers.find("Location") != this->response_headers.end())
+		make_response << "Location: " << this->response_headers["Location"] << "\r\n";
 	make_response << "\r\n";
 	if (this->get_server_id().getmethod() != "HEAD")
 		make_response << finished_content;

@@ -7,13 +7,16 @@ cgi::cgi(Request &req, s_route &conf, std::string &path)
   this->outputfile = "/tmp/resp_body";
   this->fd_input = 0;
   this->file = path.c_str();
+ 
   this->SetUpArgs_fds();
+  
   this->ExecuteCgi();
 }
 
 int cgi::checkcgi(std::string path)
 {
   struct stat s;
+  std::cout << "PATH " << path << "\n";
   if( stat(path.c_str(), &s) == 0)
     {
       if ( S_ISDIR(s.st_mode))
@@ -29,6 +32,7 @@ int cgi::checkcgi(std::string path)
             return (1);
         }
     }
+	std::cout << "wsal hna\n";
   //error
   return (0);
 }
@@ -73,7 +77,10 @@ void cgi::SetUpArgs_fds()
 {
   this->args[2] = NULL;
   if (checkcgi(this->config->cgi_path) == 1)
+  {
+	 
       this->args[0] = (char *)this->config->cgi_path.c_str();
+  }
   else
     throw 500;
    this->args[1] = (char *)this->file;
