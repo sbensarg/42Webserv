@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-Request::Request(void)
+Request::Request()
 {
 	this->data = "";
 	this->header_length = 0;
@@ -22,6 +22,7 @@ Request::~Request()
 void Request::append_data(int fd, char * data, int size)
 { 
 	size_t f = 0;
+	this->clientfd = fd;
 	//std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
 	if (total_size == 0)
 	{

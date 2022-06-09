@@ -488,7 +488,6 @@ void Response::get_string_from_path(std::string path)
 			this->set_response_string(finished_content);
 
 		} catch (int sc) {
-			std::cout << "dkhal l catch\n";
 			this->find_error_page(sc, conf.get_error_pages());
 		}
 	}

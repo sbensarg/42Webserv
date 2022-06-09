@@ -4,7 +4,11 @@ cgi::cgi(Request &req, s_route &conf, std::string &path)
 {
   this->config = &conf;
   this->reqs = &req;
-  this->outputfile = "/tmp/resp_body";
+  std::stringstream s;
+  s << req.clientfd;
+  std::string tmp;
+  s >> tmp;
+  this->outputfile = "/tmp/resp_body" + tmp;
   this->fd_input = 0;
   this->file = path.c_str();
  

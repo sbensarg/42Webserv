@@ -21,6 +21,7 @@ public:
 	int bodyfd;
 	bool request_read;
 	int check;
+	int clientfd;
 public:
 	Request(void);
 	~Request();
