@@ -17,6 +17,7 @@ void Server::setup(void)
     {
       throw ("Socket : error");
     }
+  fcntl(this->server_socket, F_SETFL, O_NONBLOCK);
   int optval = 1;
   if ((setsockopt(this->server_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(int))) == -1)
     {

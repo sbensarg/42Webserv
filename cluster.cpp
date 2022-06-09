@@ -118,25 +118,24 @@ int accept_connection(int server_socket)
 
 int Cluster::read_request(int fd)
 {
-	std::map<int, Request>::iterator it;
+  std::map<int, Request>::iterator it;
 
-	char buff[BUFF_SIZE] = {0};
-	int recb;
-	
-	it = this->requests.find(fd);
-	if (it != this->requests.end())
-	{
-		fcntl(fd, F_SETFL, O_NONBLOCK);
-		if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) <= 0)
-			return(0);
-		std::cout << buff << "\n";
-		it->second.append_data(fd, buff, recb);
-		if(it->second.request_read == true || it->second.check_all_keys() == false)
-		{
-			return (1);
-		}
-	}
-  return (0);
+  char buff[BUFF_SIZE] = {0};
+  int recb;
+
+  it = this->requests.find(fd);
+  if (it != this->requests.end())
+    {
+      fcntl(fd, F_SETFL, O_NONBLOCK);
+      if((recb = recv(fd, buff , BUFF_SIZE - 1, 0)) <= 0)
+        return(0);
+      it->second.append_data(fd, buff, recb);
+      if(it->second.request_read == true || it->second.check_all_keys() == false)
+        {
+          return (1);
+        }
+    }
+  return (2);
 }
 
 int	Cluster::handle_connection(int client_socket)
@@ -182,26 +181,27 @@ void Cluster::run(void)
                       std::cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
                       int client = accept_connection(socket_fd);
                       FD_SET(client, &this->read[socket_fd]);
-					  std::cout <<"socket_fd " << socket_fd << "\n"; 
-					  std::cout <<"client " << client << "\n"; 
-					  this->server_client.insert(std::pair<int, int>(socket_fd, client));
+                      std::cout <<"socket_fd " << socket_fd << "\n";
+                      std::cout <<"client " << client << "\n";
+                      this->server_client.insert(std::pair<int, int>(socket_fd, client));
                       this->requests.insert(std::pair<int, Request>(client, Request()));
                     }
                   else
                     {
-                      if (this->read_request(i) == 1)
+                      int ret = this->read_request(i);
+                      if (ret == 1)
                         {
                           FD_CLR(i, &this->read[socket_fd]);
                           FD_CLR(i, &tmp_read);
                           FD_SET(i, &this->write[socket_fd]);
                         }
-						else
-						{
-							this->requests.erase(i);
-     	 					close(i);
-							FD_CLR(i, &this->read[socket_fd]);
-                          	FD_CLR(i, &tmp_read);
-						}
+                      else if (ret == 0)
+                        {
+                          this->requests.erase(i);
+                          close(i);
+                          FD_CLR(i, &this->read[socket_fd]);
+                          FD_CLR(i, &tmp_read);
+                        }
                     }
                 }
               if (FD_ISSET(i, &tmp_write))
