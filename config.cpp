@@ -131,6 +131,11 @@ std::pair<std::string, s_route> Config::get_route(std::string &b, std::istringst
           else if (b.substr(10, b.find(";") - 10) != "off")
             throw ("Config File: Syntax error");
         }
+      else if (b.rfind("uploaded_file_path=") == 0)
+        {
+          ret.second.upload_path = b.substr(19, b.find(";") - 19);
+          std::cout << "upload location >> " << ret.second.upload_path << "\n";
+        }
       else if (b.rfind("path=") == 0)
         {
           ret.second.cgi_path = b.substr(5, b.find(";") - 5);

@@ -9,6 +9,7 @@ struct s_route
   std::string redirect_url;
   int redirect_status_code;
   std::string root;
+  std::string upload_path;
   std::string cgi_path;
   std::vector<std::string> index;
   std::vector<std::string> allowed_methods;
@@ -22,6 +23,7 @@ struct s_route
   }
   s_route(const s_route &c)
   {
+    this->upload_path = c.upload_path;
     this->allowed_methods = c.allowed_methods;
     this->redirect_url = c.redirect_url;
     this->redirect_status_code = c.redirect_status_code;

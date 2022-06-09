@@ -1,5 +1,6 @@
 <?php
-$target_dir = "uploads/";
+$target_dir = getenv('UPLOAD_FILE_PATH');
+echo "path  >> ".$target_dir."    |";
 $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
 echo "---> ";
 echo $_FILES["fileToUpload"]["name"];

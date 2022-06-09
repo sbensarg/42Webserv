@@ -60,6 +60,8 @@ void cgi::SetCgiEnv()
     setenv("HTTP_ACCEPT_ENCODING", this->reqs->map["Accept-Encoding"].c_str(), 1);
   if (this->reqs->map.find("Accept-Language") != this->reqs->map.end())
     setenv("HTTP_ACCEPT_LANGUAGE", this->reqs->map["Accept-Language"].c_str(), 1);
+  if (this->config->upload_path != "")
+    setenv("UPLOAD_FILE_PATH", this->config->upload_path.c_str(), 1);
   if (this->reqs->method == "GET")
   {
     setenv("QUERY_STRING", this->reqs->map["GET_params"].c_str(), 1);
@@ -78,7 +80,6 @@ void cgi::SetUpArgs_fds()
   this->args[2] = NULL;
   if (checkcgi(this->config->cgi_path) == 1)
   {
-	 
       this->args[0] = (char *)this->config->cgi_path.c_str();
   }
   else
