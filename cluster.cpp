@@ -181,8 +181,6 @@ void Cluster::run(void)
                       std::cout << "\n+++++++ Waiting for new connection ++++++++\n\n";
                       int client = accept_connection(socket_fd);
                       FD_SET(client, &this->read[socket_fd]);
-                      std::cout <<"socket_fd " << socket_fd << "\n";
-                      std::cout <<"client " << client << "\n";
                       this->server_client.insert(std::pair<int, int>(socket_fd, client));
                       this->requests.insert(std::pair<int, Request>(client, Request()));
                     }

@@ -23,7 +23,6 @@ void Request::append_data(int fd, char * data, int size)
 { 
 	size_t f = 0;
 	this->clientfd = fd;
-	//std::cout << "total_size " << total_size << ", cnt_size " << cnt_size << ", header_length " << header_length << ", cnt_size+ header_length " << header_length + cnt_size << "\n";
 	if (total_size == 0)
 	{
 		this->data.append(data);
@@ -219,8 +218,6 @@ void Request::get_port()
 	}
 	else
 		this->flag = 1;
-		
-	std::cout << "port " << this->port << " host [" << this->host << "]\n";
 }
 
 std::string Request::getRetCntType(void)

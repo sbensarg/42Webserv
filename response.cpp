@@ -1,7 +1,7 @@
 #include "response.hpp"
 #include <errno.h>
 
-Response::Response() : status_code(200), location_header(""), localhost("")
+Response::Response() : status_code(200), location_header("")
 {
 }
 
@@ -56,7 +56,6 @@ void Response::find_location_error(std::string location)
 	{
 		std::string last_path = i->first;
 		std::string first_path = i->second.root;
-		std::cout << "Location >> " << location << " last_path >> " << last_path << "\n";
 		if (location == last_path)
 		{
 			location_full_path = first_path + location;
@@ -87,7 +86,6 @@ void Response::find_error_page(int sc, std::map<int, std::string> err_pages)
 		if (it->first == sc)
 		{
 			this->find_location_error(it->second);
-			std::cout << "status code " << this->get_status_code() << "\n";
 			return ;
 		}
 		it++;
@@ -225,17 +223,13 @@ void Response::which_config(int fd)
 		for(std::vector<Config>::iterator it2 = Cluster::getInstance().configs.begin(); it2 != Cluster::getInstance().configs.end(); it2++)
 		{
 			if (it->second.host == "localhost")
-			{
-				this->localhost = it->second.host;
 				it->second.host = "127.0.0.1";
-			}
 				
 			if (it->second.host == it2->get_listen().host && it->second.port == it2->get_listen().port)
 			{
 				this->set_config_id(*it2);
 				this->set_server_id(it->second);
 				return;
-				//return (0);
 			}
 			else if (it->second.host == it2->get_servername() && it->second.port == it2->get_listen().port)
 			{	
@@ -246,15 +240,11 @@ void Response::which_config(int fd)
 					this->set_config_id(*it2);
 					this->set_server_id(it->second);
 					return;
-					//return (0);
 				}	
 			}
 		
 			else if (it->second.port == it2->get_listen().port && tmp == Cluster::getInstance().configs.end())
-			{
-				std::cout << "dkhal hnaya \n";
 				tmp = it2;
-			}
 		}
 		if (tmp != Cluster::getInstance().configs.end())
 		{
@@ -262,10 +252,8 @@ void Response::which_config(int fd)
 			this->set_server_id(it->second);
 			return;
 		}
-		
-		// return (0);
 	}
-	//return (1);
+
 }
 
 Request &Response::get_server_id(void)
@@ -351,12 +339,11 @@ void Response::find_Path(void)
 				{
 					last_path = ret_new_location(last_path, 1);
 					location_full_path = first_path + last_path + id.geturi();
-					std::cout << "location_full_path " << location_full_path << "\n";;
 					this->setFullPathLocation(location_full_path);
 					check = this->checkLocation(this->getFullPathLocation());
 					if (check == "DIR")
 					{
-						if (this->getFullPathLocation().back() != '/')
+						if (this->getFullPathLocation().back() != '/' && !(id.getmethod() == "DELETE"))
 						{
 							set_status_code(301);
 							set_location_header(id.geturi() + "/");
@@ -400,12 +387,9 @@ void Response::find_Path(void)
 						}
 						else
 						{
-							std::cout << "dkhal l string from patth  \n";
 							this->get_string_from_path(check);
 						}
 					}
-				
-						//this->setFullPathLocation(check);
 				}
 				else
 				{

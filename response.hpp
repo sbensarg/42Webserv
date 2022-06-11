@@ -16,7 +16,6 @@ private:
 	std::string location_header;
 	std::string response_string;
 	std::map<std::string, std::string> response_headers;
-	std::string localhost;
 public:
 	Response(void);
 	~Response();
