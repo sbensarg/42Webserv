@@ -337,8 +337,7 @@ void Response::find_Path(void)
 				flag = this->check_allowed_method(i->second.allowed_methods, id.getmethod());
 				if (flag == 1)
 				{
-					last_path = ret_new_location(last_path, 1);
-					location_full_path = first_path + last_path + id.geturi();
+					location_full_path = first_path + id.geturi();
 					this->setFullPathLocation(location_full_path);
 					check = this->checkLocation(this->getFullPathLocation());
 					if (check == "DIR")
