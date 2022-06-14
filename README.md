@@ -1,3 +1,3 @@
 # 42Webserv
 
-![Alt Text](https://media.giphy.com/media/bDYKYW9p4un1lg8z6R/giphy.gif)
+![preview](https://s8.gifyu.com/images/vlc-record-2022-06-14-13h20m18s-Desktop-2022.06.14---13.11.58.02.DVR.mp4.gif)
